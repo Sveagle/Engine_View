@@ -1,23 +1,33 @@
-<header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">🚢 Engine View</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+<!-- templates/includes/header.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'pages:home' %}">🚢 Engine View</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'pages:home' %}">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'monitoring:measurement_list' %}">Данные</a>
+                </li>
+                {% if user.is_authenticated %}
+                    {% if user.is_staff %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Главная</a>
+                        <a class="nav-link" href="/admin/">Админка</a>
                     </li>
+                    {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:index' %}">Админка</a>
+                        <a class="nav-link" href="{% url 'logout' %}">Выйти ({{ user.username }})</a>
                     </li>
+                {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'monitoring:measurement_list' %}">Данные</a>
+                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
                     </li>
-                </ul>
-            </div>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
-</header>
+    </div>
+</nav>

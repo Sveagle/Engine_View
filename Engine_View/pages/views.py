@@ -1,6 +1,11 @@
 from django.db.models import Count
-from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+
+
 from monitoring.models import Vessel, Engine, Measurement
+
 
 def home(request):
     # Простой и надежный подход без сложных аннотаций
@@ -24,3 +29,13 @@ def home(request):
     }
 
     return render(request, 'pages/home.html', context)
+
+
+@require_http_methods(["GET", "POST"])
+def custom_logout(request):
+    logout(request)
+    return redirect('logout_success')
+
+
+def logout_success(request):
+    return render(request, 'registration/logout.html')

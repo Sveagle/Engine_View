@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход - Engine View{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <span class="display-4">🔐</span>
+                    <h2 class="mt-2">Вход в систему</h2>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Логин</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">Войти</button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Для доступа к системе обратитесь к администратору
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

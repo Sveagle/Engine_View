@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Графики параметров - Engine View{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    .param-card {
+        transition: all 0.3s ease;
+    }
+    .param-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Хлебные крошки -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'pages:home' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'monitoring:measurement_list' %}">Данные</a></li>
+                <li class="breadcrumb-item active">Графики параметров</li>
+            </ol>
+        </nav>
+
+        <!-- Заголовок -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>📈 Графики параметров</h1>
+            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary">
+                ← Назад к данным
+            </a>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">🔍 Фильтры для графиков</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Судно</label>
+                        <select name="vessel" class="form-select">
+                            <option value="">Все суда</option>
+                            {% for vessel in vessels %}
+                            <option value="{{ vessel.id }}" {% if request.GET.vessel == vessel.id|stringformat:"s" %}selected{% endif %}>
+                                {{ vessel.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Двигатель</label>
+                        <select name="engine" class="form-select">
+                            <option value="">Все двигатели</option>
+                            {% for engine in engines %}
+                            <option value="{{ engine.id }}" {% if request.GET.engine == engine.id|stringformat:"s" %}selected{% endif %}>
+                                {{ engine.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Дата с</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Дата по</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                        <a href="{% url 'monitoring:trends' %}" class="btn btn-outline-secondary">Сбросить</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Графики -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card param-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">🌡️ Температура</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="temperatureChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Динамика температуры за выбранный период</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card param-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">📊 Давление</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Динамика давления за выбранный период</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card param-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">🔄 Обороты двигателя</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="rpmChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Динамика оборотов за выбранный период</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="card param-card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">⛽ Расход топлива</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="fuelChart"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Динамика расхода топлива за выбранный период</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Статистика по выбранным данным</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary">{{ measurements_count }}</h4>
+                            <p class="mb-0 text-muted">Всего замеров</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success">{{ date_range }}</h4>
+                            <p class="mb-0 text-muted">Период</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info">{{ vessels_count }}</h4>
+                            <p class="mb-0 text-muted">Судов</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-warning">{{ engines_count }}</h4>
+                            <p class="mb-0 text-muted">Двигателей</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Получаем данные из Django контекста
+    const chartData = {{ chart_data_json|safe }};
+    
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: false,
+                grid: { color: 'rgba(0,0,0,0.1)' }
+            },
+            x: {
+                grid: { color: 'rgba(0,0,0,0.1)' },
+                ticks: {
+                    maxTicksLimit: 10, // Ограничиваем количество меток
+                    callback: function(value) {
+                        return this.getLabelForValue(value).substring(0, 10); // Только дата
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    title: function(context) {
+                        return chartData.labels[context[0].dataIndex];
+                    }
+                }
+            }
+        }
+    };
+
+    // Температура
+    new Chart(document.getElementById('temperatureChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Температура (°C)',
+                data: chartData.temperature,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Давление
+    new Chart(document.getElementById('pressureChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Давление (бар)',
+                data: chartData.pressure,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Обороты
+    new Chart(document.getElementById('rpmChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Обороты (об/мин)',
+                data: chartData.rpm,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Расход топлива
+    new Chart(document.getElementById('fuelChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Расход топлива (л/ч)',
+                data: chartData.fuel_consumption,
+                borderColor: 'rgb(255, 159, 64)',
+                backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Убираем сообщения о загрузке
+    document.querySelectorAll('.chart-container > div').forEach(el => {
+        if (el.textContent.includes('Загрузка')) {
+            el.remove();
+        }
+    });
+});
+</script>
+{% endblock %}
