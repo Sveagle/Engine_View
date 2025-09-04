@@ -1,0 +1,179 @@
+{% extends "admin/base.html" %}
+
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Engine View Admin{% endblock %}
+
+{% block extrastyle %}
+    <!-- Подключаем Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Кастомные стили для админки -->
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --border: #dee2e6;
+            --text: #212529;
+            --text-light: #ecf0f1;
+            --text-muted: #6c757d;
+        }
+        
+        /* Скрываем стандартные кнопки темы */
+        .theme-toggle {
+            display: none !important;
+        }
+        
+        /* Основные стили */
+        #header {
+            background: var(--primary) !important;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .module h2, .module caption {
+            background: var(--secondary) !important;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        /* Кнопки */
+        .button, input[type=submit], input[type=button], .submit-row input, a.button {
+            background: var(--accent) !important;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .button:hover, input[type=submit]:hover, input[type=button]:hover {
+            background: #2980b9 !important;
+            transform: translateY(-1px);
+        }
+        
+        /* Навигация */
+        #branding h1 {
+            font-weight: 400;
+            font-size: 1.2rem;
+        }
+        
+        .nav-global {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            color: var(--text-light) !important;
+            text-decoration: none;
+            padding: 6px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        /* Таблицы и формы */
+        #changelist .results table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .form-row {
+            border-bottom: 1px solid var(--border);
+            padding: 15px 0;
+        }
+        
+        /* Иконки */
+        .bi {
+            font-size: 1.1em;
+        }
+        
+        /* Кнопка-переключатель темы */
+        .theme-switcher {
+            background: var(--accent) !important;
+            border: none;
+            color: white !important;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            transition: all 0.2s ease;
+        }
+        
+        .theme-switcher:hover {
+            background: #2980b9 !important;
+            transform: translateY(-1px);
+        }
+    </style>
+{% endblock %}
+
+{% block branding %}
+    <!-- Кастомный заголовок -->
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}" class="text-decoration-none" style="color: var(--text-light);">
+            <i class="bi bi-speedometer2"></i>Engine View Admin
+        </a>
+    </h1>
+{% endblock %}
+
+{% block nav-global %}
+    <!-- Дополнительная навигация в админке -->
+    <div class="nav-global">
+        <!-- Кнопка-переключатель темы -->
+        <button class="theme-switcher" onclick="toggleTheme()">
+            <i class="bi bi-sun-fill" id="theme-icon"></i>
+        </button>
+        
+        <a href="{% url 'home' %}" class="nav-btn">
+            <i class="bi bi-house"></i>На сайт
+        </a>
+        <a href="/monitoring" class="nav-btn">
+            <i class="bi bi-graph-up"></i>Данные
+        </a>
+    </div>
+    
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+        
+        if (html.getAttribute('data-theme') === 'dark') {
+            html.setAttribute('data-theme', 'light');
+            themeIcon.className = 'bi bi-sun-fill';
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'bi bi-moon-fill';
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    
+    // Загружаем сохраненную тему при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTheme = localStorage.getItem('theme');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'bi bi-moon-fill';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeIcon.className = 'bi bi-sun-fill';
+        }
+    });
+    </script>
+{% endblock %}
