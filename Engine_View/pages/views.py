@@ -7,25 +7,28 @@ from django.contrib.auth import logout
 from monitoring.models import Vessel, Engine, Measurement
 
 
-def home(request):
-    # Простой и надежный подход без сложных аннотаций
-    vessels = Vessel.objects.all().prefetch_related('engines')
-
-    # Аннотируем только количество двигателей
-    vessels = vessels.annotate(engine_count=Count('engines'))
-
-    # Получаем статистику отдельными запросами
+def home_view(request):
+    """Главная страница"""
+    vessels = Vessel.objects.prefetch_related('engines').all()
     engines_count = Engine.objects.count()
     measurements_count = Measurement.objects.count()
-    last_measurement = Measurement.objects.order_by('-timestamp').first()
 
-    # Для последнего замера каждого судна - будем обрабатывать в шаблоне или отдельно
+    # Получаем дату последнего замера
+    last_measurement = Measurement.objects.order_by('-timestamp').first()
+    last_measurement_date = last_measurement.timestamp if last_measurement else None
+
+    # Добавляем последний замер для каждого судна
+    for vessel in vessels:
+        vessel.last_measurement = Measurement.objects.filter(
+            engine__vessel=vessel
+        ).order_by('-timestamp').first()
+
     context = {
         'vessels': vessels,
         'vessels_count': vessels.count(),
         'engines_count': engines_count,
         'measurements_count': measurements_count,
-        'last_measurement_date': last_measurement.timestamp if last_measurement else None,
+        'last_measurement_date': last_measurement_date,
     }
 
     return render(request, 'pages/home.html', context)

@@ -1,159 +1,98 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Детали замера - Engine View{% endblock %}
+{% block title %}Замер {{ measurement.timestamp }} - Engine View{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
-        <!-- Хлебные крошки -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'pages:home' %}">Главная</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'monitoring:measurement_list' %}">Данные</a></li>
-                <li class="breadcrumb-item active">Детали замера #{{ measurement.id }}</li>
-            </ol>
-        </nav>
-
-        <!-- Заголовок -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>📊 Детали замера</h1>
-            <div>
-                <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary me-2">
-                    ← Назад к списку
-                </a>
-                <a href="{% url 'monitoring:trends' %}?engine={{ measurement.engine.id }}" class="btn btn-primary">
-                    📈 Смотреть графики
-                </a>
-            </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>📊 Детали замера</h2>
+            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary">
+                ← Назад к списку
+            </a>
         </div>
+    </div>
+</div>
 
-        <!-- Основная информация -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card param-card">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0">🛳️ Судно</h6>
-                    </div>
-                    <div class="card-body text-center">
-                        <h4>{{ measurement.engine.vessel.name }}</h4>
-                        <p class="text-muted mb-0">IMO: {{ measurement.engine.vessel.imo_number|default:"Не указан" }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card param-card">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0">⚙️ Двигатель</h6>
-                    </div>
-                    <div class="card-body text-center">
-                        <h4>{{ measurement.engine.name }}</h4>
-                        <p class="text-muted mb-0">Тип: {{ measurement.engine.engine_type|default:"Не указан" }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card param-card">
-                    <div class="card-header bg-info text-white">
-                        <h6 class="mb-0">📅 Дата и время</h6>
-                    </div>
-                    <div class="card-body text-center">
-                        <h4>{{ measurement.timestamp|date:"d.m.Y" }}</h4>
-                        <p class="text-muted mb-0">{{ measurement.timestamp|date:"H:i:s" }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Карточки с основными параметрами -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-header">🌡️ Температура</div>
-                    <div class="card-body">
-                        <h3>{{ measurement.temperature|default:"Н/Д" }}</h3>
-                        <p class="text-muted mb-0">°C</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-header">📊 Давление</div>
-                    <div class="card-body">
-                        <h3>{{ measurement.pressure|default:"Н/Д" }}</h3>
-                        <p class="text-muted mb-0">бар</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-header">🔄 Обороты</div>
-                    <div class="card-body">
-                        <h3>{{ measurement.rpm|default:"Н/Д" }}</h3>
-                        <p class="text-muted mb-0">об/мин</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-header">⛽ Расход топлива</div>
-                    <div class="card-body">
-                        <h3>{{ measurement.fuel_consumption|default:"Н/Д" }}</h3>
-                        <p class="text-muted mb-0">л/ч</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Таблица всех параметров -->
+<div class="row">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">📋 Все параметры замера</h5>
+                <h5>📋 Информация о замере</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Параметр</th>
-                                <th>Значение</th>
-                                <th>Единица измерения</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Температура</td>
-                                <td>{{ measurement.temperature|default:"Н/Д" }}</td>
-                                <td>°C</td>
-                            </tr>
-                            <tr>
-                                <td>Давление</td>
-                                <td>{{ measurement.pressure|default:"Н/Д" }}</td>
-                                <td>бар</td>
-                            </tr>
-                            <tr>
-                                <td>Обороты двигателя</td>
-                                <td>{{ measurement.rpm|default:"Н/Д" }}</td>
-                                <td>об/мин</td>
-                            </tr>
-                            <tr>
-                                <td>Расход топлива</td>
-                                <td>{{ measurement.fuel_consumption|default:"Н/Д" }}</td>
-                                <td>л/ч</td>
-                            </tr>
-                            <tr>
-                                <td>Давление масла</td>
-                                <td>{{ measurement.oil_pressure|default:"Н/Д" }}</td>
-                                <td>бар</td>
-                            </tr>
-                            <tr>
-                                <td>Температура охлаждающей жидкости</td>
-                                <td>{{ measurement.coolant_temperature|default:"Н/Д" }}</td>
-                                <td>°C</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Судно:</th>
+                        <td>{{ measurement.engine.vessel.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Двигатель:</th>
+                        <td>{{ measurement.engine.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Модель:</th>
+                        <td>{{ measurement.engine.model }}</td>
+                    </tr>
+                    <tr>
+                        <th>Время замера:</th>
+                        <td>{{ measurement.timestamp|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Добавил:</th>
+                        <td>
+                            {% if measurement.created_by %}
+                                {{ measurement.created_by.username }}
+                            {% else %}
+                                <span class="text-muted">Система</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if measurement.notes %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>📝 Примечания</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ measurement.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>📈 Параметры двигателя</h5>
+            </div>
+            <div class="card-body">
+                {% if parameters %}
+                <div class="row">
+                    {% for param_name, param_data in parameters.items %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body py-3">
+                                <h6 class="card-title mb-1">{{ param_name }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h4 text-primary">{{ param_data.value }}</span>
+                                    <span class="text-muted">{{ param_data.unit }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <h5>📭 Параметры не указаны</h5>
+                    <p class="text-muted">Для этого замера не указаны значения параметров</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

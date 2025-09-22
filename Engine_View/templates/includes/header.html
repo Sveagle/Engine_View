@@ -6,25 +6,43 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'pages:home' %}">Главная</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'monitoring:measurement_list' %}">Данные</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'monitoring:trends' %}">Графики</a>
+                </li>
+                {% if user.is_authenticated and user.is_staff %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        📊 Админ
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                        <li><a class="dropdown-item" href="{% url 'monitoring:import_csv' %}">📤 Импорт CSV</a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring:parameter_management' %}">⚙️ Параметры</a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring:create_measurement' %}">➕ Добавить замер</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/">⚙️ Админ-панель</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                    {% if user.is_staff %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/">Админка</a>
+                        <span class="navbar-text me-3">👤 {{ user.username }}</span>
                     </li>
-                    {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">Выйти ({{ user.username }})</a>
+                        <a class="nav-link" href="{% url 'logout' %}">🚪 Выйти</a>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                        <a class="nav-link" href="{% url 'login' %}">🔑 Войти</a>
                     </li>
                 {% endif %}
             </ul>

@@ -1,0 +1,178 @@
+<!-- monitoring/edit_parameter.html -->
+{% extends 'base.html' %}
+
+{% block title %}Редактирование параметра - Engine View{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">✏️ Редактирование параметра</h4>
+                    <a href="{% url 'monitoring:parameter_management' %}" class="btn btn-light btn-sm">
+                        ← Назад
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Информация о параметре -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>📊 Статистика параметра</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Используется в замерах:</strong> {{ parameter.parametervalue_set.count }}</li>
+                            <li><strong>Создан:</strong> {{ parameter.created_at|date:"d.m.Y H:i" }}</li>
+                            <li><strong>Статус:</strong> 
+                                {% if parameter.is_active %}
+                                    <span class="badge bg-success">Активен</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Выключен</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>💡 Подсказки</h6>
+                        <ul class="small">
+                            <li><strong>Код параметра</strong> используется в CSV импорте</li>
+                            <li><strong>Единицы измерения</strong> определяют числовой тип</li>
+                            <li><strong>Min/Max значения</strong> для валидации данных</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Форма редактирования -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    Название параметра *
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">
+                                    Код параметра *
+                                </label>
+                                {{ form.code }}
+                                <small class="form-text text-muted">
+                                    Только латинские буквы, цифры и _
+                                </small>
+                                {% if form.code.errors %}
+                                <div class="text-danger">{{ form.code.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.unit.id_for_label }}" class="form-label">
+                                    Единицы измерения
+                                </label>
+                                {{ form.unit }}
+                                <small class="form-text text-muted">
+                                    Например: °C, бар, об/мин
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.min_value.id_for_label }}" class="form-label">
+                                    Мин. значение
+                                </label>
+                                {{ form.min_value }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="{{ form.max_value.id_for_label }}" class="form-label">
+                                    Макс. значение
+                                </label>
+                                {{ form.max_value }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Описание
+                        </label>
+                        {{ form.description }}
+                        <small class="form-text text-muted">
+                            Дополнительная информация о параметре
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Параметр активен (отображается в формах)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'monitoring:parameter_management' %}" class="btn btn-secondary me-md-2">
+                            Отмена
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            💾 Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Опасная зона -->
+                {% if parameter.parametervalue_set.count == 0 %}
+                <div class="mt-5 pt-4 border-top">
+                    <h6 class="text-danger">⚠️ Опасная зона</h6>
+                    <div class="alert alert-warning">
+                        <p class="mb-2">Этот параметр не используется в замерах. Вы можете его удалить.</p>
+                        <form method="post" action="{% url 'monitoring:parameter_management' %}" 
+                              onsubmit="return confirm('Вы уверены что хотите удалить параметр \"{{ parameter.name }}\"?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="parameter_id" value="{{ parameter.pk }}">
+                            <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm">
+                                🗑️ Удалить параметр
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="mt-5 pt-4 border-top">
+                    <div class="alert alert-info">
+                        <p class="mb-0">
+                            ⚠️ Этот параметр используется в {{ parameter.parametervalue_set.count }} замерах. 
+                            Удаление невозможно.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+.form-switch .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+</style>
+{% endblock %}

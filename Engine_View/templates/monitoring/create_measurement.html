@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Добавить замер - Engine View{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">📊 Добавить новый замер</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" id="measurement-form">
+                    {% csrf_token %}
+                    
+                    <!-- Основная информация -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.engine.id_for_label }}">Двигатель *</label>
+                                {{ form.engine }}
+                                {% if form.engine.errors %}
+                                <div class="text-danger">{{ form.engine.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.timestamp.id_for_label }}">Время замера *</label>
+                                {{ form.timestamp }}
+                                {% if form.timestamp.errors %}
+                                <div class="text-danger">{{ form.timestamp.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Параметры -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5>📈 Параметры двигателя</h5>
+                            <p class="text-muted">Заполните необходимые параметры:</p>
+                            
+                            <div class="row">
+                                {% for field in form %}
+                                    {% if field.name|slice:":6" == "param_" %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-group">
+                                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% if field.help_text %}
+                                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                                            {% endif %}
+                                            {% if field.errors %}
+                                            <div class="text-danger">{{ field.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Примечания -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="{{ form.notes.id_for_label }}">Примечания</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                💾 Сохранить замер
+                            </button>
+                            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
+                                ← Назад к списку
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-control {
+    border-radius: 0.375rem;
+}
+.card {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+</style>
+
+<script>
+// JavaScript для улучшения UX
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматическое обновление времени до текущего
+    const timestampField = document.getElementById('{{ form.timestamp.id_for_label }}');
+    if (!timestampField.value) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        timestampField.value = now.toISOString().slice(0, 16);
+    }
+
+    // Валидация числовых полей
+    const numberFields = document.querySelectorAll('input[type="number"]');
+    numberFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            const value = parseFloat(this.value);
+            if (this.value && isNaN(value)) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -41,7 +41,13 @@
                     </div>
                     <div class="col-md-3 col-6 text-center">
                         <div class="p-3 border rounded">
-                            <h3 class="text-info">{{ last_measurement_date|date:"d.m.Y" }}</h3>
+                            <h3 class="text-info">
+                                {% if last_measurement_date %}
+                                    {{ last_measurement_date|date:"d.m.Y" }}
+                                {% else %}
+                                    Нет данных
+                                {% endif %}
+                            </h3>
                             <p class="mb-0 text-muted">Последний замер</p>
                         </div>
                     </div>
@@ -66,10 +72,7 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-2">
-                            <strong>Тип:</strong> {{ vessel.type|default:"Не указан" }}
-                        </div>
-                        <div class="mb-2">
-                            <strong>IMO:</strong> {{ vessel.imo_number|default:"Не указан" }}
+                            <strong>IMO:</strong> {{ vessel.imo_number }}
                         </div>
                         <div class="mb-3">
                             <strong>Двигателей:</strong> {{ vessel.engines.count }}
@@ -77,6 +80,10 @@
                         {% if vessel.last_measurement %}
                         <div class="small text-muted">
                             Последний замер: {{ vessel.last_measurement.timestamp|date:"d.m.Y H:i" }}
+                        </div>
+                        {% else %}
+                        <div class="small text-muted">
+                            Замеров пока нет
                         </div>
                         {% endif %}
                     </div>
@@ -103,28 +110,53 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-primary w-100 py-3">
-                            📋 Все данные замеров
+                            📋 Все замеры
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'monitoring:trends' %}" class="btn btn-info w-100 py-3">
+                            📊 Графики параметров
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'monitoring:vessel_engine_stats' %}" class="btn btn-warning w-100 py-3">
+                            📈 Статистика
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {% if user.is_staff %}
                         <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary w-100 py-3">
                             ⚙️ Админ-панель
                         </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {% if user.is_staff %}
-                        <a href="{% url 'admin:monitoring_measurement_add' %}" class="btn btn-success w-100 py-3">
-                            📤 Импорт данных
-                        </a>
                         {% else %}
-                        <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-info w-100 py-3">
-                            📊 Графики параметров
+                        <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-success w-100 py-3">
+                            🔍 Поиск данных
                         </a>
                         {% endif %}
                     </div>
                 </div>
+                {% if user.is_authenticated and user.is_staff %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <a href="{% url 'monitoring:create_measurement' %}" class="btn btn-success me-2">
+                                ➕ Добавить замер
+                            </a>
+                            <a href="{% url 'admin:monitoring_parametertype_add' %}" class="btn btn-outline-primary me-2">
+                                ⚙️ Управление параметрами
+                            </a>
+                            <a href="{% url 'admin:monitoring_measurement_add' %}" class="btn btn-outline-info">
+                                📤 Импорт данных
+                            </a>
+                            <a href="{% url 'monitoring:import_csv' %}" class="btn btn-success">
+                                📤 Импорт CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -137,9 +169,17 @@
             <h4>📭 Данных пока нет</h4>
             <p>В системе еще нет загруженных данных о судах и замерах.</p>
             {% if user.is_staff %}
-            <a href="{% url 'admin:monitoring_measurement_add' %}" class="btn btn-primary mt-2">
-                📤 Загрузить данные
-            </a>
+            <div class="mt-3">
+                <a href="{% url 'admin:monitoring_vessel_add' %}" class="btn btn-primary me-2">
+                    ➕ Добавить судно
+                </a>
+                <a href="{% url 'admin:monitoring_engine_add' %}" class="btn btn-primary me-2">
+                    🔧 Добавить двигатель
+                </a>
+                <a href="{% url 'admin:monitoring_measurement_add' %}" class="btn btn-success">
+                    📤 Загрузить данные
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>

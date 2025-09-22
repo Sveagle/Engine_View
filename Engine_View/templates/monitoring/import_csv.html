@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Импорт CSV - Engine View{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">📤 Импорт данных из CSV</h4>
+            </div>
+            <div class="card-body">
+                
+                <!-- Инструкция -->
+                <div class="alert alert-info">
+                    <h5>📋 Инструкция по импорту:</h5>
+                    <ol class="mb-0">
+                        <li>Подготовьте CSV файл с данными</li>
+                        <li>Первая строка должна содержать заголовки колонок</li>
+                        <li>Обязательная колонка: <code>timestamp</code> (время замера)</li>
+                        <li>Остальные колонки должны соответствовать кодам параметров</li>
+                    </ol>
+                </div>
+
+                <!-- Форма импорта -->
+                <form method="post" enctype="multipart/form-data" id="import-form">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.vessel.id_for_label }}">Судно *</label>
+                                {{ form.vessel }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.engine.id_for_label }}">Двигатель *</label>
+                                {{ form.engine }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.csv_file.id_for_label }}">CSV файл *</label>
+                                {{ form.csv_file }}
+                                <small class="form-text text-muted">{{ form.csv_file.help_text }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="{{ form.delimiter.id_for_label }}">Разделитель</label>
+                                {{ form.delimiter }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="{{ form.timestamp_format.id_for_label }}">Формат даты</label>
+                                {{ form.timestamp_format }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                📤 Начать импорт
+                            </button>
+                            <a href="{% url 'monitoring:download_csv_template' %}" class="btn btn-outline-primary btn-lg">
+                                📥 Скачать шаблон
+                            </a>
+                            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
+                                ← Назад
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="mt-4">
+                    <a href="{% url 'monitoring:parameter_management' %}" class="btn btn-outline-primary">
+                        ⚙️ Управление параметрами
+                    </a>
+                </div>
+                {% if created_parameters %}
+                <div class="mt-4">
+                    <h5>✅ Созданы новые параметры:</h5>
+                    <ul>
+                        {% for param in created_parameters %}
+                        <li>{{ param.name }} ({{ param.code }}) - {{ param.unit|default:"текстовый" }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <!-- Список параметров -->
+                <div class="mt-5">
+                    <h5>📊 Доступные параметры для импорта:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Код параметра</th>
+                                    <th>Название</th>
+                                    <th>Единица измерения</th>
+                                    <th>Описание</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for param in parameter_types %}
+                                <tr>
+                                    <td><code>{{ param.code }}</code></td>
+                                    <td>{{ param.name }}</td>
+                                    <td>{{ param.unit }}</td>
+                                    <td>{{ param.description|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ошибки импорта -->
+                {% if import_errors %}
+                <div class="mt-4">
+                    <h5 class="text-danger">❌ Ошибки при импорте:</h5>
+                    <div class="alert alert-warning">
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            {% for error in import_errors %}
+                            <div class="mb-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Динамическое обновление списка двигателей при выборе судна
+document.getElementById('id_vessel').addEventListener('change', function() {
+    const form = document.getElementById('import-form');
+    form.submit(); // Отправляем форму для обновления списка двигателей
+});
+
+// Показ превью файла
+document.getElementById('id_csv_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = e.target.result.split('\n').slice(0, 5).join('\n');
+            // Можно добавить превью содержимого файла
+        };
+        reader.readAsText(file);
+    }
+});
+</script>
+{% endblock %}

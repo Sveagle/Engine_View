@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление замера - Engine View{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">🗑️ Удаление замера</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>⚠️ Внимание!</h5>
+                    <p>Вы собираетесь удалить замер:</p>
+                    <ul>
+                        <li><strong>Судно:</strong> {{ measurement.engine.vessel.name }}</li>
+                        <li><strong>Двигатель:</strong> {{ measurement.engine.name }}</li>
+                        <li><strong>Время:</strong> {{ measurement.timestamp|date:"d.m.Y H:i" }}</li>
+                        <li><strong>Параметров:</strong> {{ measurement.parameter_values.count }}</li>
+                    </ul>
+                    <p class="mb-0"><strong>Это действие нельзя отменить!</strong></p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑️ Да, удалить замер
+                        </button>
+                        <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
+                            ← Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
