@@ -1,119 +1,396 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Управление параметрами - Engine View{% endblock %}
+{% block title %}Управление параметрами - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>⚙️ Управление параметрами</h2>
-            <a href="{% url 'monitoring:import_csv' %}" class="btn btn-primary">
-                📤 Импорт CSV
-            </a>
+        <!-- Хедер -->
+        <div class="glass-effect rounded-3 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold"><i class="bi bi-sliders me-2"></i>Управление параметрами</h2>
+                    <p class="text-muted mb-0">Настройка параметров мониторинга судовых двигателей</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'monitoring:import_csv' %}" class="btn btn-primary-modern px-4 py-3">
+                        <i class="bi bi-cloud-upload me-2"></i>Импорт CSV
+                    </a>
+                    <a href="{% url 'admin:monitoring_parametertype_add' %}" class="btn btn-success-modern px-4 py-3">
+                        <i class="bi bi-plus-circle me-2"></i>Добавить параметр
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">📊 Все параметры системы</h5>
+        <!-- Основная таблица -->
+        <div class="glass-effect rounded-3 overflow-hidden">
+            <div class="table-header-modern p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-list-ul me-2"></i>Все параметры системы
+                    </h5>
+                    <div class="text-white">
+                        Всего: <strong>{{ parameters.count }}</strong> параметров
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
+
+            <div class="p-0">
+                {% if parameters %}
+                <div class="table-responsive-modern">
+                    <table class="table table-modern mb-0">
                         <thead>
                             <tr>
-                                <th>Название</th>
-                                <th>Код</th>
-                                <th>Единицы</th>
-                                <th>Тип</th>
-                                <th>Используется</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
+                                <th width="20%">Название</th>
+                                <th width="15%">Код</th>
+                                <th width="15%">Единицы</th>
+                                <th width="15%">Тип</th>
+                                <th width="15%">Используется</th>
+                                <th width="10%">Статус</th>
+                                <th width="10%">Действия</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for param in parameters %}
-                            <tr>
-                                <td>{{ param.name }}</td>
-                                <td><code>{{ param.code }}</code></td>
-                                <td>{{ param.unit|default:"-" }}</td>
+                            <tr class="parameter-row">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="parameter-icon me-3">
+                                            <i class="bi bi-speedometer2"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ param.name }}</div>
+                                            {% if param.description %}
+                                            <small class="text-muted">{{ param.description|truncatewords:5 }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code class="parameter-code">{{ param.code }}</code>
+                                </td>
                                 <td>
                                     {% if param.unit %}
-                                        <span class="badge bg-info">Числовой</span>
+                                    <span class="badge bg-primary-modern">{{ param.unit }}</span>
                                     {% else %}
-                                        <span class="badge bg-warning">Текстовый</span>
+                                    <span class="text-muted">—</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {{ param.parametervalue_set.count }} раз
+                                    {% if param.unit %}
+                                        <span class="badge bg-info-modern">Числовой</span>
+                                    {% else %}
+                                        <span class="badge bg-warning-modern">Текстовый</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="usage-info">
+                                        <i class="bi bi-database me-1"></i>
+                                        {{ param.parametervalue_set.count }} раз
+                                    </div>
                                 </td>
                                 <td>
                                     {% if param.is_active %}
-                                        <span class="badge bg-success">Активен</span>
+                                        <span class="status-badge status-active">
+                                            <i class="bi bi-check-circle me-1"></i>Активен
+                                        </span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Выключен</span>
+                                        <span class="status-badge status-inactive">
+                                            <i class="bi bi-x-circle me-1"></i>Выключен
+                                        </span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <!-- ВСТАВИЛ УЛУЧШЕННЫЕ КНОПКИ ЗДЕСЬ -->
-                                    <div class="btn-group btn-group-sm">
+                                    <div class="btn-group-modern">
                                         <a href="{% url 'monitoring:edit_parameter' param.pk %}" 
-                                        class="btn btn-outline-primary" title="Редактировать">
-                                            ✏️ Редакт
+                                           class="btn btn-action btn-edit" 
+                                           title="Редактировать параметр">
+                                            <i class="bi bi-pencil"></i>
                                         </a>
+                                        
                                         <form method="post" class="d-inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="parameter_id" value="{{ param.pk }}">
                                             <button type="submit" name="action" value="toggle" 
-                                                    class="btn btn-outline-{% if param.is_active %}warning{% else %}success{% endif %}"
+                                                    class="btn btn-action {% if param.is_active %}btn-warning{% else %}btn-success{% endif %}"
                                                     title="{% if param.is_active %}Выключить{% else %}Включить{% endif %}">
-                                                {% if param.is_active %}🔴{% else %}🟢{% endif %}
+                                                {% if param.is_active %}
+                                                    <i class="bi bi-pause"></i>
+                                                {% else %}
+                                                    <i class="bi bi-play"></i>
+                                                {% endif %}
                                             </button>
                                         </form>
+                                        
                                         {% if param.parametervalue_set.count == 0 %}
                                         <form method="post" class="d-inline" 
                                             onsubmit="return confirm('Удалить параметр \"{{ param.name }}\"?')">
                                             {% csrf_token %}
                                             <input type="hidden" name="parameter_id" value="{{ param.pk }}">
                                             <button type="submit" name="action" value="delete" 
-                                                    class="btn btn-outline-danger" title="Удалить">
-                                                🗑️
+                                                    class="btn btn-action btn-danger"
+                                                    title="Удалить параметр">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                         {% else %}
-                                        <button class="btn btn-outline-secondary" disabled title="Нельзя удалить (используется)">
-                                            🚫
+                                        <button class="btn btn-action btn-secondary" disabled 
+                                                title="Нельзя удалить (используется в {{ param.parametervalue_set.count }} замерах)">
+                                            <i class="bi bi-lock"></i>
                                         </button>
                                         {% endif %}
                                     </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    Параметры не найдены
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-sliders display-1 text-muted"></i>
+                        <h4 class="mt-3">Параметры не найдены</h4>
+                        <p class="text-muted mb-4">Создайте первый параметр для начала работы</p>
+                        <a href="{% url 'admin:monitoring_parametertype_add' %}" class="btn btn-primary-modern">
+                            <i class="bi bi-plus-circle me-2"></i>Добавить параметр
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">💡 Подсказки</h5>
+        <!-- Подсказки -->
+        <div class="glass-effect rounded-3 mt-4">
+            <div class="card-header-modern p-4">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-lightbulb me-2"></i>Подсказки по управлению параметрами
+                </h5>
             </div>
-            <div class="card-body">
-                <ul>
-                    <li><strong>🟢 Активные параметры</strong> - отображаются в формах и импорте</li>
-                    <li><strong>🔴 Выключенные параметры</strong> - скрыты из форм, но данные сохраняются</li>
-                    <li><strong>🗑️ Удаление</strong> - доступно только для неиспользуемых параметров</li>
-                    <li><strong>📊 Числовые параметры</strong> - имеют единицы измерения и используются в графиках</li>
-                    <li><strong>📝 Текстовые параметры</strong> - без единиц измерения, только для отображения</li>
-                </ul>
+            <div class="p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="hint-card">
+                            <div class="hint-icon bg-success-modern">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="hint-content">
+                                <h6>Активные параметры</h6>
+                                <p class="mb-0">Отображаются в формах и доступны для импорта</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="hint-card">
+                            <div class="hint-icon bg-warning-modern">
+                                <i class="bi bi-pause-circle"></i>
+                            </div>
+                            <div class="hint-content">
+                                <h6>Выключенные параметры</h6>
+                                <p class="mb-0">Скрыты из форм, но данные сохраняются</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="hint-card">
+                            <div class="hint-icon bg-info-modern">
+                                <i class="bi bi-calculator"></i>
+                            </div>
+                            <div class="hint-content">
+                                <h6>Числовые параметры</h6>
+                                <p class="mb-0">Имеют единицы измерения, используются в графиках</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="hint-card">
+                            <div class="hint-icon bg-secondary">
+                                <i class="bi bi-text-paragraph"></i>
+                            </div>
+                            <div class="hint-content">
+                                <h6>Текстовые параметры</h6>
+                                <p class="mb-0">Без единиц измерения, только для отображения</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Стили для страницы управления параметрами */
+.parameter-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.parameter-code {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-inactive {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.usage-info {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.btn-edit:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.btn-warning:hover {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.btn-success:hover {
+    background: #22c55e;
+    color: white;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.btn-danger:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-secondary {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+}
+
+.hint-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    height: 100%;
+}
+
+.hint-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.hint-content h6 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.hint-content p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.parameter-row:hover {
+    background: rgba(102, 126, 234, 0.03) !important;
+    transform: translateX(4px);
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+// Поиск по параметрам
+document.addEventListener('DOMContentLoaded', function() {
+    // Анимация появления строк
+    const rows = document.querySelectorAll('.parameter-row');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
+        }, index * 100);
+    });
+
+    // Подтверждение действий
+    const deleteButtons = document.querySelectorAll('button[title="Удалить параметр"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const paramName = this.closest('tr').querySelector('.fw-semibold').textContent;
+            if (!confirm(`Удалить параметр "${paramName}"?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

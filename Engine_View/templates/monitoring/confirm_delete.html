@@ -1,35 +1,86 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Удаление замера - Engine View{% endblock %}
+{% block title %}Удаление замера - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h4 class="mb-0">🗑️ Удаление замера</h4>
+    <div class="col-lg-6 col-md-8">
+        <!-- Главная карточка -->
+        <div class="glass-effect rounded-3 overflow-hidden">
+            <!-- Хедер с градиентом -->
+            <div class="bg-danger-gradient text-white p-4">
+                <div class="text-center">
+                    <i class="bi bi-trash3 display-4 mb-3"></i>
+                    <h2 class="mb-2 fw-bold">Удаление замера</h2>
+                    <p class="mb-0 opacity-75">Подтвердите удаление данных</p>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="alert alert-warning">
-                    <h5>⚠️ Внимание!</h5>
-                    <p>Вы собираетесь удалить замер:</p>
-                    <ul>
-                        <li><strong>Судно:</strong> {{ measurement.engine.vessel.name }}</li>
-                        <li><strong>Двигатель:</strong> {{ measurement.engine.name }}</li>
-                        <li><strong>Время:</strong> {{ measurement.timestamp|date:"d.m.Y H:i" }}</li>
-                        <li><strong>Параметров:</strong> {{ measurement.parameter_values.count }}</li>
-                    </ul>
-                    <p class="mb-0"><strong>Это действие нельзя отменить!</strong></p>
+
+            <div class="p-4">
+                <!-- Предупреждение -->
+                <div class="alert alert-warning-modern border-0 mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-3 me-3"></i>
+                        <div>
+                            <h5 class="text-warning mb-2">Внимание! Это действие необратимо</h5>
+                            <p class="mb-0">Все данные замера будут безвозвратно удалены из системы</p>
+                        </div>
+                    </div>
                 </div>
 
-                <form method="post">
+                <!-- Информация о замере -->
+                <div class="measurement-info-card mb-4">
+                    <div class="info-header">
+                        <i class="bi bi-clipboard-data text-primary"></i>
+                        <h6 class="mb-0">Информация о замере</h6>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="bi bi-ship"></i>
+                            <div>
+                                <div class="info-label">Судно</div>
+                                <div class="info-value">{{ measurement.engine.vessel.name }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-gear"></i>
+                            <div>
+                                <div class="info-label">Двигатель</div>
+                                <div class="info-value">{{ measurement.engine.name }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-clock"></i>
+                            <div>
+                                <div class="info-label">Время замера</div>
+                                <div class="info-value">{{ measurement.timestamp|date:"d.m.Y H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-graph-up"></i>
+                            <div>
+                                <div class="info-label">Параметров</div>
+                                <div class="info-value">{{ measurement.parameter_values.count }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Форма удаления -->
+                <form method="post" id="delete-form">
                     {% csrf_token %}
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-danger btn-lg">
-                            🗑️ Да, удалить замер
+                    
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-danger-modern btn-lg py-3" id="delete-btn">
+                            <i class="bi bi-trash3 me-2"></i>
+                            <span>Да, удалить замер</span>
+                            <div class="spinner-border spinner-border-sm ms-2 d-none" id="delete-spinner"></div>
                         </button>
-                        <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
-                            ← Отмена
+                        
+                        <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary-modern btn-lg py-3">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Отмена и вернуться к списку
                         </a>
                     </div>
                 </form>
@@ -37,4 +88,163 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Стили для страницы удаления */
+.bg-danger-gradient {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.alert-warning-modern {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+}
+
+.measurement-info-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-header i {
+    font-size: 1.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+}
+
+.info-item i {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.btn-danger-modern {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-danger-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+/* Анимации */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForm = document.getElementById('delete-form');
+    const deleteBtn = document.getElementById('delete-btn');
+    const deleteSpinner = document.getElementById('delete-spinner');
+    
+    let clickCount = 0;
+    
+    deleteForm.addEventListener('submit', function(e) {
+        clickCount++;
+        
+        if (clickCount === 1) {
+            // Первое нажатие - предупреждение
+            e.preventDefault();
+            
+            deleteBtn.classList.add('shake');
+            deleteBtn.querySelector('span').textContent = 'Нажмите еще раз для подтверждения';
+            deleteBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            
+            setTimeout(() => {
+                deleteBtn.classList.remove('shake');
+            }, 500);
+            
+            // Сброс через 3 секунды
+            setTimeout(() => {
+                clickCount = 0;
+                deleteBtn.querySelector('span').textContent = 'Да, удалить замер';
+                deleteBtn.style.background = '';
+            }, 3000);
+            
+        } else if (clickCount === 2) {
+            // Второе нажатие - подтверждение
+            deleteBtn.disabled = true;
+            deleteSpinner.classList.remove('d-none');
+            deleteBtn.querySelector('span').textContent = 'Удаление...';
+        }
+    });
+    
+    // Анимация появления
+    const card = document.querySelector('.glass-effect');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        card.style.transition = 'all 0.6s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 100);
+});
+</script>
 {% endblock %}

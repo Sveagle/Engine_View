@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import CSVImportForm, MeasurementFilterForm, MeasurementWithParametersForm, ParameterTypeForm
 from .models import Engine, Measurement, ParameterType, ParameterValue, Vessel
@@ -78,11 +79,13 @@ def measurement_list(request):
     paginator = Paginator(measurements, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    one_week_ago = timezone.now() - timedelta(days=7)
 
     context = {
-        'measurements': page_obj,
-        'vessels': Vessel.objects.all(),
-        'engines': Engine.objects.all(),
+        'measurements': measurements,
+        'vessels_count': measurements.values('engine__vessel').distinct().count(),
+        'engines_count': measurements.values('engine').distinct().count(),
+        'last_week_count': measurements.filter(timestamp__gte=one_week_ago).count(),
         'filter_form': filter_form,
         'is_paginated': paginator.num_pages > 1,
         'page_obj': page_obj,
@@ -128,7 +131,7 @@ def trends(request):
 
     vessel_id = request.GET.get('vessel')
     engine_id = request.GET.get('engine')
-    parameter_code = request.GET.get('parameter', 'temperature')
+    parameter_code = request.GET.get('parameter')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
 
@@ -141,17 +144,23 @@ def trends(request):
     if date_to:
         measurements = measurements.filter(timestamp__date__lte=date_to)
 
-    # Получаем выбранный параметр
+    # Получаем выбранный параметр (без 404 ошибки)
     selected_parameter = None
     if parameter_code:
-        selected_parameter = get_object_or_404(ParameterType, code=parameter_code)
+        try:
+            selected_parameter = ParameterType.objects.get(code=parameter_code, is_active=True)
+        except ParameterType.DoesNotExist:
+            # Если параметр не найден, берем первый активный
+            selected_parameter = parameter_types.first()
+            messages.warning(request, f'Параметр "{parameter_code}" не найден. Показан первый доступный параметр.')
+    else:
+        # Если параметр не выбран, берем первый активный
+        selected_parameter = parameter_types.first()
 
     # Подготовка данных для графиков
-    chart_data = (
-        prepare_chart_data(measurements, selected_parameter)
-        if selected_parameter
-        else {}
-    )
+    chart_data = {}
+    if selected_parameter and measurements.exists():
+        chart_data = prepare_chart_data(measurements, selected_parameter)
 
     context = {
         'vessels': vessels,
@@ -274,7 +283,7 @@ def import_csv(request):
     """Импорт данных замеров из CSV файла - умная версия."""
     parameter_types = ParameterType.objects.filter(is_active=True)
     import_errors = []
-    
+
     if request.method == 'POST':
         form = CSVImportForm(request.POST, request.FILES)
         if form.is_valid():
@@ -304,12 +313,12 @@ def import_csv(request):
                         # Ищем колонку с временем
                         timestamp_str = None
                         time_keys = ['timestamp', 'time', 'время', 'дата', 'date']
-                        
+
                         for key in time_keys:
                             if key in row and row.get(key):
                                 timestamp_str = row[key]
                                 break
-                        
+
                         if not timestamp_str:
                             error_rows.append(f"Строка {row_num}: Не найдена колонка с временем")
                             continue
@@ -330,24 +339,24 @@ def import_csv(request):
                         for header, value in row.items():
                             # Пропускаем колонки с временем и пустые значения
                             header_lower = header.lower().strip()
-                            if (header_lower in time_keys or 
-                                not value or 
+                            if (header_lower in time_keys or
+                                not value or
                                 not str(value).strip() or
                                 str(value).strip().lower() in ['null', 'none', '']):
                                 continue
 
                             value_str = str(value).strip()
-                            
+
                             # Ищем соответствующий параметр
                             param_type = None
-                            
+
                             if header_lower in parameter_mapping:
                                 param_type = parameter_mapping[header_lower]
                             else:
                                 # Определяем тип параметра по данным
                                 data_type = 'text'  # по умолчанию текст
                                 unit = ''
-                                
+
                                 # Пробуем определить числовой параметр
                                 try:
                                     float(value_str.replace(',', '.'))
@@ -363,7 +372,7 @@ def import_csv(request):
                                         unit = 'л/ч'
                                 except ValueError:
                                     data_type = 'text'
-                                
+
                                 # Создаем новый параметр
                                 param_type, created = ParameterType.objects.get_or_create(
                                     name=header.title(),
@@ -399,14 +408,14 @@ def import_csv(request):
                                             f"'{value_str}' для параметра '{header}'"
                                         )
                                         continue
-                                
+
                                 ParameterValue.objects.create(
                                     measurement=measurement,
                                     parameter_type=param_type,
                                     value=param_value,
                                 )
                                 param_count += 1
-                                
+
                             except ValueError:
                                 error_rows.append(
                                     f"Строка {row_num}: Неверное значение "
@@ -444,7 +453,7 @@ def import_csv(request):
                         f'⚠️ Найдено ошибок: {len(error_rows)}'
                     )
                     import_errors = error_rows[:10]
-                    
+
                     return render(request, 'monitoring/import_csv.html', {
                         'form': form,
                         'import_errors': import_errors,
@@ -563,15 +572,15 @@ def delete_measurement(request, pk):
 def parameter_management(request):
     """Страница управления параметрами."""
     parameters = ParameterType.objects.all().order_by('is_active', 'name')
-    
+
     if request.method == 'POST':
         # Обработка включения/выключения параметров
         parameter_id = request.POST.get('parameter_id')
         action = request.POST.get('action')
-        
+
         if parameter_id and action:
             parameter = get_object_or_404(ParameterType, id=parameter_id)
-            
+
             if action == 'toggle':
                 parameter.is_active = not parameter.is_active
                 parameter.save()
@@ -581,7 +590,7 @@ def parameter_management(request):
                 # Проверяем, используется ли параметр
                 if parameter.parametervalue_set.exists():
                     messages.error(
-                        request, 
+                        request,
                         f'Нельзя удалить параметр "{parameter.name}" - он используется в замерах'
                     )
                 else:

@@ -1,48 +1,83 @@
 <!-- templates/includes/header.html -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark glass-effect" style="position: relative; z-index: 1030;">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'pages:home' %}">🚢 Engine View</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <a class="navbar-brand fw-bold" href="{% url 'pages:home' %}">
+            <i class="bi bi-speedometer2 me-2"></i>Engine View
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+        
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pages:home' %}">Главная</a>
+                    <a class="nav-link active" href="{% url 'pages:home' %}">
+                        <i class="bi bi-house me-1"></i>Главная
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'monitoring:measurement_list' %}">Данные</a>
+                    <a class="nav-link" href="{% url 'monitoring:measurement_list' %}">
+                        <i class="bi bi-table me-1"></i>Данные
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'monitoring:trends' %}">Графики</a>
+                    <a class="nav-link" href="{% url 'monitoring:trends' %}">
+                        <i class="bi bi-graph-up me-1"></i>Графики
+                    </a>
                 </li>
+                
                 {% if user.is_authenticated and user.is_staff %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" 
                        data-bs-toggle="dropdown" aria-expanded="false">
-                        📊 Админ
+                        <i class="bi bi-sliders me-1"></i>Админ
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                        <li><a class="dropdown-item" href="{% url 'monitoring:import_csv' %}">📤 Импорт CSV</a></li>
-                        <li><a class="dropdown-item" href="{% url 'monitoring:parameter_management' %}">⚙️ Параметры</a></li>
-                        <li><a class="dropdown-item" href="{% url 'monitoring:create_measurement' %}">➕ Добавить замер</a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring:import_csv' %}">
+                            <i class="bi bi-upload me-2"></i>Импорт CSV
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring:parameter_management' %}">
+                            <i class="bi bi-gear me-2"></i>Управление параметрами
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring:create_measurement' %}">
+                            <i class="bi bi-plus-circle me-2"></i>Добавить замер
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/admin/">⚙️ Админ-панель</a></li>
+                        <li><a class="dropdown-item" href="/admin/">
+                            <i class="bi bi-shield-lock me-2"></i>Админ-панель
+                        </a></li>
                     </ul>
                 </li>
                 {% endif %}
             </ul>
+            
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <span class="navbar-text me-3">👤 {{ user.username }}</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">🚪 Выйти</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>{{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-person me-2"></i>Профиль пользователя
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-gear me-2"></i>Настройки
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i>Выйти из системы
+                            </a></li>
+                        </ul>
                     </li>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">🔑 Войти</a>
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Войти
+                        </a>
                     </li>
                 {% endif %}
             </ul>

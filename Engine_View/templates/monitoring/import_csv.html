@@ -1,120 +1,258 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Импорт CSV - Engine View{% endblock %}
+{% block title %}Импорт CSV - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">📤 Импорт данных из CSV</h4>
+    <div class="col-xxl-10 col-xl-12">
+        <!-- Главная карточка -->
+        <div class="glass-effect rounded-3 overflow-hidden mb-4" style="background: var(--surface-color); border: 1px solid var(--border-color);">
+            <!-- Хедер с градиентом -->
+            <div class="bg-primary-gradient text-white p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="mb-1 fw-bold"><i class="bi bi-cloud-upload me-2"></i>Импорт данных из CSV</h2>
+                        <p class="mb-0 opacity-75">Загрузка и обработка данных судовых двигателей</p>
+                    </div>
+                    <div class="rounded-pill px-3 py-1" style="background: linear-gradient(135deg, #fff, #e3f2fd); color: #1976d2 !important; border: 1px solid #bbdefb;">
+                        <i class="bi bi-filetype-csv me-1"></i>CSV Format
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                
-                <!-- Инструкция -->
-                <div class="alert alert-info">
-                    <h5>📋 Инструкция по импорту:</h5>
-                    <ol class="mb-0">
-                        <li>Подготовьте CSV файл с данными</li>
-                        <li>Первая строка должна содержать заголовки колонок</li>
-                        <li>Обязательная колонка: <code>timestamp</code> (время замера)</li>
-                        <li>Остальные колонки должны соответствовать кодам параметров</li>
-                    </ol>
+
+            <div class="p-4">
+                <!-- ИНСТРУКЦИЯ - ФИКС ЦВЕТОВ -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-modern border-0" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill text-primary fs-3 me-3"></i>
+                                <div style="color: var(--text-color);">
+                                    <h5 class="text-primary mb-2">📋 Инструкция по импорту</h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center" style="color: var(--text-color);">
+                                                <span class="badge bg-primary me-2">1</span>
+                                                <span>Подготовьте CSV файл с данными</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center" style="color: var(--text-color);">
+                                                <span class="badge bg-primary me-2">2</span>
+                                                <span>Первая строка - заголовки колонок</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center" style="color: var(--text-color);">
+                                                <span class="badge bg-primary me-2">3</span>
+                                                <span>Обязательная колонка: <code style="background: rgba(59, 130, 246, 0.2); color: var(--text-color); padding: 2px 6px; border-radius: 4px;">timestamp</code></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center" style="color: var(--text-color);">
+                                                <span class="badge bg-primary me-2">4</span>
+                                                <span>Колонки соответствуют кодам параметров</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Форма импорта -->
-                <form method="post" enctype="multipart/form-data" id="import-form">
+                <form method="post" enctype="multipart/form-data" id="import-form" class="needs-validation" novalidate>
                     {% csrf_token %}
                     
+                    <!-- Блок выбора судна и двигателя -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.vessel.id_for_label }}">Судно *</label>
-                                {{ form.vessel }}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.vessel.id_for_label }}" class="form-label fw-semibold" style="color: var(--text-color);">
+                                    <i class="bi bi-ship me-2"></i>Судно *
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.vessel }}
+                                </div>
+                                {% if form.vessel.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.vessel.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.engine.id_for_label }}">Двигатель *</label>
-                                {{ form.engine }}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.engine.id_for_label }}" class="form-label fw-semibold" style="color: var(--text-color);">
+                                    <i class="bi bi-gear me-2"></i>Двигатель *
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.engine }}
+                                </div>
+                                {% if form.engine.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.engine.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
+                    <!-- Блок файла и настроек -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.csv_file.id_for_label }}">CSV файл *</label>
-                                {{ form.csv_file }}
-                                <small class="form-text text-muted">{{ form.csv_file.help_text }}</small>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.csv_file.id_for_label }}" class="form-label fw-semibold" style="color: var(--text-color);">
+                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>CSV файл *
+                                </label>
+                                <div class="file-upload-area" id="file-upload-area" style="background: var(--surface-color); border: 2px dashed var(--border-color);">
+                                    <div class="file-upload-content">
+                                        <i class="bi bi-cloud-upload display-4" style="color: var(--text-muted);"></i>
+                                        <p class="mb-2" style="color: var(--text-color);">Перетащите файл или нажмите для выбора</p>
+                                        <small class="text-muted">Поддерживаются файлы .csv, .txt</small>
+                                        {{ form.csv_file }}
+                                    </div>
+                                    <div class="file-preview d-none" id="file-preview" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                                        <i class="bi bi-file-earmark-text text-success me-2"></i>
+                                        <span id="file-name" style="color: var(--text-color);">file.csv</span>
+                                        <button type="button" class="btn-close btn-close-sm ms-2" onclick="clearFile()"></button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted mt-2">{{ form.csv_file.help_text }}</small>
+                                {% if form.csv_file.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.csv_file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="{{ form.delimiter.id_for_label }}">Разделитель</label>
-                                {{ form.delimiter }}
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.delimiter.id_for_label }}" class="form-label fw-semibold" style="color: var(--text-color);">
+                                    <i class="bi bi-text-paragraph me-2"></i>Разделитель
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.delimiter }}
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="{{ form.timestamp_format.id_for_label }}">Формат даты</label>
-                                {{ form.timestamp_format }}
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.timestamp_format.id_for_label }}" class="form-label fw-semibold" style="color: var(--text-color);">
+                                    <i class="bi bi-calendar-event me-2"></i>Формат даты
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.timestamp_format }}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Кнопки -->
-                    <div class="row">
+                    <!-- Кнопки действий -->
+                    <div class="row mb-4">
                         <div class="col-12">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                📤 Начать импорт
-                            </button>
-                            <a href="{% url 'monitoring:download_csv_template' %}" class="btn btn-outline-primary btn-lg">
-                                📥 Скачать шаблон
-                            </a>
-                            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
-                                ← Назад
-                            </a>
+                            <div class="d-flex flex-wrap gap-3">
+                                <button type="submit" class="btn btn-success-modern btn-lg px-4 py-3" id="submit-btn">
+                                    <i class="bi bi-cloud-upload me-2"></i>
+                                    <span>Начать импорт</span>
+                                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="submit-spinner"></div>
+                                </button>
+                                
+                                <a href="{% url 'monitoring:download_csv_template' %}" class="btn btn-outline-primary-modern btn-lg px-4 py-3">
+                                    <i class="bi bi-download me-2"></i>
+                                    Скачать шаблон
+                                </a>
+                                
+                                <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary-modern btn-lg px-4 py-3">
+                                    <i class="bi bi-arrow-left me-2"></i>
+                                    Назад к данным
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </form>
 
+                <!-- Дополнительные действия -->
                 <div class="mt-4">
-                    <a href="{% url 'monitoring:parameter_management' %}" class="btn btn-outline-primary">
-                        ⚙️ Управление параметрами
+                    <a href="{% url 'monitoring:parameter_management' %}" class="btn btn-outline-primary-modern">
+                        <i class="bi bi-sliders me-2"></i>
+                        Управление параметрами
                     </a>
                 </div>
+
+                <!-- Созданные параметры -->
                 {% if created_parameters %}
                 <div class="mt-4">
-                    <h5>✅ Созданы новые параметры:</h5>
-                    <ul>
-                        {% for param in created_parameters %}
-                        <li>{{ param.name }} ({{ param.code }}) - {{ param.unit|default:"текстовый" }}</li>
-                        {% endfor %}
-                    </ul>
+                    <div class="alert alert-success border-0" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <h5 class="mb-3" style="color: var(--text-color);"><i class="bi bi-check-circle-fill me-2"></i>✅ Созданы новые параметры</h5>
+                        <div class="row g-2">
+                            {% for param in created_parameters %}
+                            <div class="col-md-6">
+                                <div class="rounded p-2" style="background: rgba(255, 255, 255, 0.5);">
+                                    <strong style="color: var(--text-color);">{{ param.name }}</strong>
+                                    <code class="ms-2" style="background: rgba(59, 130, 246, 0.2); color: var(--text-color); padding: 2px 6px; border-radius: 4px;">{{ param.code }}</code>
+                                    <span class="badge bg-light text-dark ms-2">{{ param.unit|default:"текстовый" }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
+
                 <!-- Список параметров -->
                 <div class="mt-5">
-                    <h5>📊 Доступные параметры для импорта:</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0" style="color: var(--text-color);">
+                            <i class="bi bi-list-ul me-2"></i>📊 Доступные параметры для импорта
+                        </h5>
+                        <div class="input-group" style="max-width: 300px;">
+                            <input type="text" class="form-control" placeholder="Поиск параметров..." id="param-search" style="background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-color);">
+                            <button class="btn btn-outline-primary" type="button" style="border-color: var(--border-color);">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
+                        <table class="table table-striped" id="parameters-table" style="background: var(--surface-color);">
                             <thead>
                                 <tr>
-                                    <th>Код параметра</th>
-                                    <th>Название</th>
-                                    <th>Единица измерения</th>
-                                    <th>Описание</th>
+                                    <th width="20%" style="background: var(--surface-color); color: var(--text-color); border-color: var(--border-color);">Код параметра</th>
+                                    <th width="25%" style="background: var(--surface-color); color: var(--text-color); border-color: var(--border-color);">Название</th>
+                                    <th width="15%" style="background: var(--surface-color); color: var(--text-color); border-color: var(--border-color);">Единица измерения</th>
+                                    <th width="40%" style="background: var(--surface-color); color: var(--text-color); border-color: var(--border-color);">Описание</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for param in parameter_types %}
-                                <tr>
-                                    <td><code>{{ param.code }}</code></td>
-                                    <td>{{ param.name }}</td>
-                                    <td>{{ param.unit }}</td>
-                                    <td>{{ param.description|default:"-" }}</td>
+                                <tr class="param-row" style="background: var(--surface-color);">
+                                    <td style="color: var(--text-color); border-color: var(--border-color);">
+                                        <code class="param-code" style="background: rgba(59, 130, 246, 0.2); color: var(--text-color);">{{ param.code }}</code>
+                                    </td>
+                                    <td style="color: var(--text-color); border-color: var(--border-color);">
+                                        <strong>{{ param.name }}</strong>
+                                    </td>
+                                    <td style="color: var(--text-color); border-color: var(--border-color);">
+                                        {% if param.unit %}
+                                        <span class="badge bg-primary">{{ param.unit }}</span>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="color: var(--text-color); border-color: var(--border-color);">
+                                        {{ param.description|default:"Описание отсутствует" }}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -125,40 +263,289 @@
                 <!-- Ошибки импорта -->
                 {% if import_errors %}
                 <div class="mt-4">
-                    <h5 class="text-danger">❌ Ошибки при импорте:</h5>
-                    <div class="alert alert-warning">
-                        <div style="max-height: 300px; overflow-y: auto;">
+                    <div class="alert alert-danger border-0" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <h5 class="mb-3" style="color: var(--text-color);"><i class="bi bi-exclamation-triangle-fill me-2"></i>❌ Ошибки при импорте</h5>
+                        <div class="error-scroll" style="max-height: 300px; overflow-y: auto;">
                             {% for error in import_errors %}
-                            <div class="mb-1">{{ error }}</div>
+                            <div class="error-item rounded p-2 mb-2" style="background: rgba(255, 255, 255, 0.5);">
+                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                <span style="color: var(--text-color);">{{ error }}</span>
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
                 {% endif %}
-
             </div>
         </div>
     </div>
 </div>
 
+<style>
+/* FIX: Основные исправления цветов */
+.glass-effect {
+    background: var(--surface-color) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Стили для формы */
+.form-group-modern {
+    margin-bottom: 1.5rem;
+}
+
+.form-group-modern .form-label {
+    color: var(--text-color) !important;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.input-group-modern select,
+.input-group-modern input {
+    background: var(--surface-color) !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    color: var(--text-color) !important;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.input-group-modern select:focus,
+.input-group-modern input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Стили для file upload */
+.file-upload-area {
+    border: 2px dashed var(--border-color) !important;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: var(--surface-color) !important;
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    border-color: #667eea !important;
+    background: rgba(102, 126, 234, 0.05) !important;
+}
+
+.file-upload-area.dragover {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.file-upload-content input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Кнопки */
+.btn-success-modern {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    color: white;
+}
+
+.btn-outline-primary-modern {
+    border: 2px solid #667eea !important;
+    color: #667eea !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: transparent !important;
+}
+
+.btn-outline-primary-modern:hover {
+    background: #667eea !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary-modern {
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: transparent !important;
+}
+
+.btn-outline-secondary-modern:hover {
+    background: var(--border-color) !important;
+    color: var(--text-color) !important;
+    transform: translateY(-1px);
+}
+
+/* Таблица */
+.table {
+    color: var(--text-color) !important;
+}
+
+.table th {
+    background: var(--surface-color) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+.table td {
+    border-color: var(--border-color) !important;
+    background: var(--surface-color) !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-bs-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Алерты */
+.alert {
+    color: var(--text-color) !important;
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+</style>
+
 <script>
-// Динамическое обновление списка двигателей при выборе судна
-document.getElementById('id_vessel').addEventListener('change', function() {
-    const form = document.getElementById('import-form');
-    form.submit(); // Отправляем форму для обновления списка двигателей
+// Остальной JavaScript код остается без изменений
+// Drag and drop для файла
+const fileUploadArea = document.getElementById('file-upload-area');
+const fileInput = document.querySelector('input[type="file"]');
+const filePreview = document.getElementById('file-preview');
+const fileName = document.getElementById('file-name');
+const fileUploadContent = document.querySelector('.file-upload-content');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, preventDefaults, false);
 });
 
-// Показ превью файла
-document.getElementById('id_csv_file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = e.target.result.split('\n').slice(0, 5).join('\n');
-            // Можно добавить превью содержимого файла
-        };
-        reader.readAsText(file);
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight() {
+    fileUploadArea.classList.add('dragover');
+}
+
+function unhighlight() {
+    fileUploadArea.classList.remove('dragover');
+}
+
+fileUploadArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    fileInput.files = files;
+    handleFiles(files);
+}
+
+fileInput.addEventListener('change', function() {
+    handleFiles(this.files);
+});
+
+function handleFiles(files) {
+    if (files.length > 0) {
+        const file = files[0];
+        fileName.textContent = file.name;
+        fileUploadContent.classList.add('d-none');
+        filePreview.classList.remove('d-none');
     }
+}
+
+function clearFile() {
+    fileInput.value = '';
+    fileUploadContent.classList.remove('d-none');
+    filePreview.classList.add('d-none');
+}
+
+// Поиск по параметрам
+document.getElementById('param-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('.param-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const code = row.querySelector('.param-code').textContent.toLowerCase();
+        
+        if (text.includes(searchTerm) || code.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Динамическое обновление списка двигателей
+document.getElementById('id_vessel').addEventListener('change', function() {
+    const submitBtn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('submit-spinner');
+    
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+    
+    setTimeout(() => {
+        document.getElementById('import-form').submit();
+    }, 500);
+});
+
+// Валидация формы
+document.getElementById('import-form').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('submit-spinner');
+    
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+    submitBtn.querySelector('span').textContent = 'Импорт...';
 });
 </script>
 {% endblock %}

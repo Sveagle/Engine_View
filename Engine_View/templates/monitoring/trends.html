@@ -1,310 +1,513 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Графики параметров - Engine View{% endblock %}
-
-{% block extra_head %}
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    .chart-container {
-        position: relative;
-        height: 400px;
-        width: 100%;
-        margin-bottom: 2rem;
-    }
-    .param-card {
-        transition: all 0.3s ease;
-    }
-    .param-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    }
-</style>
-{% endblock %}
+{% block title %}Графики параметров - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <!-- Хлебные крошки -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'pages:home' %}">Главная</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'monitoring:measurement_list' %}">Данные</a></li>
-                <li class="breadcrumb-item active">Графики параметров</li>
-            </ol>
-        </nav>
-
-        <!-- Заголовок -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>📈 Графики параметров</h1>
-            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary">
-                ← Назад к данным
-            </a>
+        <!-- Хедер страницы -->
+        <div class="glass-effect rounded-3 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold"><i class="bi bi-graph-up me-2"></i>Аналитика параметров</h2>
+                    <p class="text-muted mb-0">Визуализация данных судовых двигателей в реальном времени</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary-modern">
+                        <i class="bi bi-arrow-left me-2"></i>К данным
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'monitoring:import_csv' %}" class="btn btn-primary-modern">
+                        <i class="bi bi-cloud-upload me-2"></i>Импорт
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <!-- Фильтры -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">🔍 Фильтры для графиков</h5>
+        <div class="glass-effect rounded-3 p-4 mb-4">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-funnel text-primary me-2"></i>
+                <h5 class="mb-0">Фильтры для анализа</h5>
             </div>
-            <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Судно</label>
-                        <select name="vessel" class="form-select">
-                            <option value="">Все суда</option>
-                            {% for vessel in vessels %}
-                            <option value="{{ vessel.id }}" {% if request.GET.vessel == vessel.id|stringformat:"s" %}selected{% endif %}>
-                                {{ vessel.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+            
+            <form method="get" class="row g-3" id="filterForm">
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-ship me-2"></i>Судно
+                        </label>
+                        <div class="input-group-modern">
+                            <select name="vessel" class="form-select" onchange="this.form.submit()">
+                                <option value="">Все суда</option>
+                                {% for vessel in vessels %}
+                                <option value="{{ vessel.id }}" {% if request.GET.vessel == vessel.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ vessel.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Двигатель</label>
-                        <select name="engine" class="form-select">
-                            <option value="">Все двигатели</option>
-                            {% for engine in engines %}
-                            <option value="{{ engine.id }}" {% if request.GET.engine == engine.id|stringformat:"s" %}selected{% endif %}>
-                                {{ engine.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-gear me-2"></i>Двигатель
+                        </label>
+                        <div class="input-group-modern">
+                            <select name="engine" class="form-select" onchange="this.form.submit()">
+                                <option value="">Все двигатели</option>
+                                {% for engine in engines %}
+                                <option value="{{ engine.id }}" {% if request.GET.engine == engine.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ engine.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Дата с</label>
-                        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-speedometer2 me-2"></i>Параметр
+                        </label>
+                        <div class="input-group-modern">
+                            <select name="parameter" class="form-select" onchange="this.form.submit()">
+                                {% for param in parameter_types %}
+                                <option value="{{ param.code }}" {% if selected_parameter.code == param.code %}selected{% endif %}>
+                                    {{ param.name }} ({{ param.unit }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Дата по</label>
-                        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-calendar-range me-2"></i>Период
+                        </label>
+                        <div class="input-group-modern">
+                            <input type="text" name="date_range" class="form-control" id="dateRangePicker" 
+                                   placeholder="Выберите период" value="{{ date_range }}">
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Применить фильтры</button>
-                        <a href="{% url 'monitoring:trends' %}" class="btn btn-outline-secondary">Сбросить</a>
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                        <button type="submit" class="btn btn-primary-modern px-4 py-3">
+                            <i class="bi bi-graph-up me-2"></i>Построить графики
+                        </button>
+                        <a href="{% url 'monitoring:trends' %}" class="btn btn-outline-secondary-modern">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Сбросить
+                        </a>
+                        <div class="stat-badge-small bg-info-modern">
+                            <i class="bi bi-database me-1"></i>
+                            Замеров: <strong>{{ measurements_count }}</strong>
+                        </div>
                     </div>
-                </form>
+                </div>
+            </form>
+        </div>
+
+        <!-- Основной график -->
+        <div class="glass-effect rounded-3 overflow-hidden mb-4">
+            <div class="chart-header-modern p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        {{ selected_parameter.name }} 
+                        <small class="opacity-75">({{ selected_parameter.unit }})</small>
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light-modern btn-sm" onclick="downloadChart()">
+                            <i class="bi bi-download me-1"></i>Скачать
+                        </button>
+                        <button class="btn btn-light-modern btn-sm" onclick="toggleFullscreen()">
+                            <i class="bi bi-arrows-fullscreen me-1"></i>Полный экран
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4">
+                {% if measurements_count > 0 %}
+                <div class="chart-container-modern">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                
+                <!-- Статистика -->
+                <div class="stats-grid-modern mt-4">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon-modern bg-primary-modern">
+                            <i class="bi bi-arrow-down"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="minValue">0</div>
+                            <div class="stat-label">Минимум</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-modern">
+                        <div class="stat-icon-modern bg-success-modern">
+                            <i class="bi bi-arrow-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="maxValue">0</div>
+                            <div class="stat-label">Максимум</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-modern">
+                        <div class="stat-icon-modern bg-info-modern">
+                            <i class="bi bi-dash"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="avgValue">0</div>
+                            <div class="stat-label">Среднее</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-modern">
+                        <div class="stat-icon-modern bg-warning-modern">
+                            <i class="bi bi-dot"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">{{ chart_data_json.values|length }}</div>
+                            <div class="stat-label">Точек данных</div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state-modern">
+                    <div class="empty-icon">
+                        <i class="bi bi-bar-chart"></i>
+                    </div>
+                    <h4>Нет данных для отображения</h4>
+                    <p class="text-muted">Выберите другие фильтры или загрузите данные измерений</p>
+                    {% if user.is_staff %}
+                    <a href="{% url 'monitoring:import_csv' %}" class="btn btn-primary-modern mt-2">
+                        <i class="bi bi-cloud-upload me-2"></i>Загрузить данные
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Графики -->
-        <div class="row">
-            <div class="col-lg-6 mb-4">
-                <div class="card param-card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">🌡️ Температура</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="temperatureChart"></canvas>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">Динамика температуры за выбранный период</small>
-                        </div>
-                    </div>
-                </div>
+        <!-- Быстрый выбор параметров -->
+        <div class="glass-effect rounded-3 p-4">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-lightning text-warning me-2"></i>
+                <h5 class="mb-0">Быстрый выбор параметров</h5>
             </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card param-card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">📊 Давление</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="pressureChart"></canvas>
+            
+            <div class="row g-3">
+                {% for param in parameter_types|slice:":8" %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <a href="?parameter={{ param.code }}{% if request.GET.vessel %}&vessel={{ request.GET.vessel }}{% endif %}{% if request.GET.engine %}&engine={{ request.GET.engine }}{% endif %}" 
+                       class="parameter-quick-card {% if selected_parameter.code == param.code %}active{% endif %}">
+                        <div class="parameter-icon">
+                            <i class="bi bi-speedometer2"></i>
                         </div>
-                        <div class="mt-3">
-                            <small class="text-muted">Динамика давления за выбранный период</small>
+                        <div class="parameter-info">
+                            <div class="parameter-name">{{ param.name }}</div>
+                            <div class="parameter-unit">{{ param.unit }}</div>
                         </div>
-                    </div>
+                        <div class="parameter-badge">
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </a>
                 </div>
-            </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card param-card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">🔄 Обороты двигателя</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="rpmChart"></canvas>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">Динамика оборотов за выбранный период</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card param-card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">⛽ Расход топлива</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="fuelChart"></canvas>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">Динамика расхода топлива за выбранный период</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Статистика -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">📊 Статистика по выбранным данным</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
-                        <div class="border rounded p-3">
-                            <h4 class="text-primary">{{ measurements_count }}</h4>
-                            <p class="mb-0 text-muted">Всего замеров</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="border rounded p-3">
-                            <h4 class="text-success">{{ date_range }}</h4>
-                            <p class="mb-0 text-muted">Период</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="border rounded p-3">
-                            <h4 class="text-info">{{ vessels_count }}</h4>
-                            <p class="mb-0 text-muted">Судов</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="border rounded p-3">
-                            <h4 class="text-warning">{{ engines_count }}</h4>
-                            <p class="mb-0 text-muted">Двигателей</p>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<style>
+/* Стили для страницы графиков */
+.chart-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.chart-container-modern {
+    position: relative;
+    height: 500px;
+    width: 100%;
+    background: var(--surface-color);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.stats-grid-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card-modern {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.stat-icon-modern {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.parameter-quick-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.parameter-quick-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    color: var(--text-color);
+}
+
+.parameter-quick-card.active {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.parameter-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.parameter-info {
+    flex: 1;
+}
+
+.parameter-name {
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.parameter-unit {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.parameter-badge {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.empty-state-modern {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.stat-badge-small {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.btn-light-modern {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-light-modern:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .chart-container-modern {
+        height: 300px;
+    }
+    
+    .stats-grid-modern {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .parameter-quick-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Получаем данные из Django контекста
+    // Инициализация графиков
     const chartData = {{ chart_data_json|safe }};
     
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: false,
-                grid: { color: 'rgba(0,0,0,0.1)' }
-            },
-            x: {
-                grid: { color: 'rgba(0,0,0,0.1)' },
-                ticks: {
-                    maxTicksLimit: 10, // Ограничиваем количество меток
-                    callback: function(value) {
-                        return this.getLabelForValue(value).substring(0, 10); // Только дата
-                    }
-                }
-            }
-        },
-        plugins: {
-            legend: { position: 'top' },
-            tooltip: {
-                mode: 'index',
-                intersect: false,
-                callbacks: {
-                    title: function(context) {
-                        return chartData.labels[context[0].dataIndex];
-                    }
-                }
-            }
-        }
-    };
+    if (chartData.labels && chartData.labels.length > 0) {
+        initChart(chartData);
+        updateStats(chartData.values);
+    }
 
-    // Температура
-    new Chart(document.getElementById('temperatureChart'), {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Температура (°C)',
-                data: chartData.temperature,
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: chartOptions
-    });
-
-    // Давление
-    new Chart(document.getElementById('pressureChart'), {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Давление (бар)',
-                data: chartData.pressure,
-                borderColor: 'rgb(54, 162, 235)',
-                backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: chartOptions
-    });
-
-    // Обороты
-    new Chart(document.getElementById('rpmChart'), {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Обороты (об/мин)',
-                data: chartData.rpm,
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: chartOptions
-    });
-
-    // Расход топлива
-    new Chart(document.getElementById('fuelChart'), {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Расход топлива (л/ч)',
-                data: chartData.fuel_consumption,
-                borderColor: 'rgb(255, 159, 64)',
-                backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: chartOptions
-    });
-
-    // Убираем сообщения о загрузке
-    document.querySelectorAll('.chart-container > div').forEach(el => {
-        if (el.textContent.includes('Загрузка')) {
-            el.remove();
-        }
+    // Авто-обновление при изменении фильтров
+    document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', function() {
+            showLoadingState();
+            document.getElementById('filterForm').submit();
+        });
     });
 });
+
+function initChart(chartData) {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: `${chartData.parameter_name} (${chartData.parameter_unit})`,
+                data: chartData.values,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#667eea',
+                pointBorderColor: '#fff',
+                pointRadius: 4,
+                pointHoverRadius: 8,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    ticks: { color: var(--text-color) }
+                },
+                x: {
+                    grid: { color: 'rgba(0,0,0,0.1)' },
+                    ticks: { 
+                        color: var(--text-color),
+                        maxTicksLimit: 8
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    callbacks: {
+                        title: function(context) {
+                            return chartData.labels[context[0].dataIndex];
+                        },
+                        label: function(context) {
+                            return `${context.parsed.y} ${chartData.parameter_unit}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateStats(values) {
+    const minValue = Math.min(...values).toFixed(2);
+    const maxValue = Math.max(...values).toFixed(2);
+    const avgValue = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+    
+    document.getElementById('minValue').textContent = minValue;
+    document.getElementById('maxValue').textContent = maxValue;
+    document.getElementById('avgValue').textContent = avgValue;
+}
+
+function downloadChart() {
+    const canvas = document.getElementById('mainChart');
+    const link = document.createElement('a');
+    link.download = `график-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+function toggleFullscreen() {
+    const chart = document.querySelector('.chart-container-modern');
+    if (!document.fullscreenElement) {
+        chart.requestFullscreen?.();
+    } else {
+        document.exitFullscreen?.();
+    }
+}
+
+function showLoadingState() {
+    const button = document.querySelector('button[type="submit"]');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-arrow-repeat spinner"></i> Загрузка...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 2000);
+}
 </script>
 {% endblock %}

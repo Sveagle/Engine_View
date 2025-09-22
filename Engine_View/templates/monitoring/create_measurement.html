@@ -1,59 +1,122 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Добавить замер - Engine View{% endblock %}
+{% block title %}Добавить замер - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">📊 Добавить новый замер</h4>
+    <div class="col-xxl-10 col-xl-12">
+        <!-- Главная карточка -->
+        <div class="glass-effect rounded-3 overflow-hidden mb-4">
+            <!-- Хедер с градиентом -->
+            <div class="bg-primary-gradient text-white p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="mb-1 fw-bold"><i class="bi bi-plus-circle me-2"></i>Добавить новый замер</h2>
+                        <p class="mb-0 opacity-75">Ввод данных параметров судового двигателя</p>
+                    </div>
+                    <div class="bg-light bg-opacity-100 rounded-pill px-3 py-1" style="background: rgba(255,255,255,0.9) !important; color: #000 !important;">
+                        <i class="bi bi-speedometer2 me-1"></i>Real-time Data
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <form method="post" id="measurement-form">
+
+            <div class="p-4">
+                <form method="post" id="measurement-form" class="needs-validation" novalidate>
                     {% csrf_token %}
                     
                     <!-- Основная информация -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.engine.id_for_label }}">Двигатель *</label>
-                                {{ form.engine }}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.engine.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="bi bi-gear me-2"></i>Двигатель *
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.engine }}
+                                </div>
                                 {% if form.engine.errors %}
-                                <div class="text-danger">{{ form.engine.errors }}</div>
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.engine.errors %}
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.timestamp.id_for_label }}">Время замера *</label>
-                                {{ form.timestamp }}
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label for="{{ form.timestamp.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="bi bi-clock me-2"></i>Время замера *
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.timestamp }}
+                                </div>
                                 {% if form.timestamp.errors %}
-                                <div class="text-danger">{{ form.timestamp.errors }}</div>
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.timestamp.errors %}
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Параметры -->
+                    <!-- Параметры двигателя -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <h5>📈 Параметры двигателя</h5>
-                            <p class="text-muted">Заполните необходимые параметры:</p>
+                            <div class="section-header mb-4">
+                                <h5 class="mb-2">
+                                    <i class="bi bi-graph-up me-2"></i>Параметры двигателя
+                                </h5>
+                                <p class="text-muted mb-0">Заполните значения измеренных параметров</p>
+                            </div>
                             
-                            <div class="row">
+                            <div class="row g-3">
                                 {% for field in form %}
                                     {% if field.name|slice:":6" == "param_" %}
-                                    <div class="col-md-6 mb-3">
-                                        <div class="form-group">
-                                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                            {{ field }}
-                                            {% if field.help_text %}
-                                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    <div class="col-xl-4 col-md-6">
+                                        <div class="parameter-input-card" data-parameter-type="{% if field.field.unit %}numeric{% else %}text{% endif %}">
+                                            <div class="parameter-header">
+                                                <label for="{{ field.id_for_label }}" class="parameter-label">
+                                                    <i class="bi bi-record-circle me-2"></i>{{ field.label }}
+                                                </label>
+                                                {% if field.field.unit %}
+                                                <span class="parameter-unit">{{ field.field.unit }}</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="input-wrapper">
+                                                {{ field }}
+                                                {% if field.help_text %}
+                                                <span class="input-help" title="{{ field.help_text }}">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Блок действий для числовых параметров -->
+                                            {% if field.field.unit %}
+                                            <div class="parameter-actions">
+                                                <button type="button" class="btn-action btn-decrease" data-target="{{ field.id_for_label }}">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <button type="button" class="btn-action btn-increase" data-target="{{ field.id_for_label }}">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn-action btn-reset" data-target="{{ field.id_for_label }}">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                </button>
+                                            </div>
                                             {% endif %}
+                                            
                                             {% if field.errors %}
-                                            <div class="text-danger">{{ field.errors }}</div>
+                                            <div class="text-danger small mt-1">
+                                                {% for error in field.errors %}
+                                                    <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+                                                {% endfor %}
+                                            </div>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -66,21 +129,38 @@
                     <!-- Примечания -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <div class="form-group">
-                                <label for="{{ form.notes.id_for_label }}">Примечания</label>
-                                {{ form.notes }}
+                            <div class="form-group-modern">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="bi bi-chat-text me-2"></i>Примечания
+                                </label>
+                                <div class="input-group-modern">
+                                    {{ form.notes }}
+                                </div>
+                                <small class="form-text text-muted">Дополнительная информация о замере (необязательно)</small>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Кнопки действий -->
                     <div class="row">
                         <div class="col-12">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                💾 Сохранить замер
-                            </button>
-                            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary btn-lg">
-                                ← Назад к списку
-                            </a>
+                            <div class="d-flex flex-wrap gap-3">
+                                <button type="submit" class="btn btn-success-modern btn-lg px-4 py-3" id="submit-btn">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <span>Сохранить замер</span>
+                                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="submit-spinner"></div>
+                                </button>
+                                
+                                <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary-modern btn-lg px-4 py-3">
+                                    <i class="bi bi-arrow-left me-2"></i>
+                                    Назад к списку
+                                </a>
+                                
+                                <button type="button" class="btn btn-outline-primary-modern btn-lg px-4 py-3" id="clear-form">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>
+                                    Очистить форму
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -90,20 +170,192 @@
 </div>
 
 <style>
-.form-group {
+/* Стили для страницы создания замера */
+.section-header {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
+}
+
+.parameter-input-card {
+    background: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+}
+
+.parameter-input-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.parameter-input-card[data-parameter-type="numeric"] {
+    border-left: 4px solid #10b981;
+}
+
+.parameter-input-card[data-parameter-type="text"] {
+    border-left: 4px solid #f59e0b;
+}
+
+.parameter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 1rem;
 }
-.form-control {
-    border-radius: 0.375rem;
+
+.parameter-label {
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0;
+    font-size: 1rem;
+    line-height: 1.4;
 }
-.card {
+
+.parameter-unit {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.input-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 16px;
+    padding-right: 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.parameter-input-card[data-parameter-type="numeric"] input {
+    color: #10b981;
+    font-size: 1.2rem;
+}
+
+.parameter-input-card[data-parameter-type="text"] input {
+    color: #f59e0b;
+    text-align: left;
+    font-size: 1rem;
+}
+
+.input-help {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    cursor: help;
+    z-index: 2;
+}
+
+/* Блок действий для числовых параметров */
+.parameter-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
     border: none;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-decrease {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.btn-decrease:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-increase {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.btn-increase:hover {
+    background: #22c55e;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-reset {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+}
+
+.btn-reset:hover {
+    background: #64748b;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Индикатор типа параметра */
+.parameter-type-badge {
+    position: absolute;
+    top: -8px;
+    right: 16px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 3;
+}
+
+.parameter-input-card[data-parameter-type="numeric"] .parameter-type-badge {
+    background: #10b981;
+    color: white;
+}
+
+.parameter-input-card[data-parameter-type="text"] .parameter-type-badge {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .parameter-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .parameter-actions {
+        flex-wrap: wrap;
+    }
+    
+    .input-wrapper input {
+        font-size: 1rem;
+        padding: 10px 12px;
+    }
 }
 </style>
 
 <script>
-// JavaScript для улучшения UX
 document.addEventListener('DOMContentLoaded', function() {
     // Автоматическое обновление времени до текущего
     const timestampField = document.getElementById('{{ form.timestamp.id_for_label }}');
@@ -120,10 +372,162 @@ document.addEventListener('DOMContentLoaded', function() {
             const value = parseFloat(this.value);
             if (this.value && isNaN(value)) {
                 this.classList.add('is-invalid');
-            } else {
+                this.classList.remove('is-valid');
+            } else if (this.value) {
+                this.classList.add('is-valid');
                 this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-invalid', 'is-valid');
             }
         });
+    });
+
+    // Очистка формы
+    document.getElementById('clear-form').addEventListener('click', function() {
+        if (confirm('Очистить все поля формы?')) {
+            document.getElementById('measurement-form').reset();
+            
+            // Сброс времени к текущему
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            timestampField.value = now.toISOString().slice(0, 16);
+            
+            // Сброс валидации
+            numberFields.forEach(field => {
+                field.classList.remove('is-invalid', 'is-valid');
+            });
+        }
+    });
+
+    // Валидация при отправке
+    document.getElementById('measurement-form').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submit-btn');
+        const spinner = document.getElementById('submit-spinner');
+        
+        let isValid = true;
+        
+        // Проверка обязательных полей
+        const requiredFields = document.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Заполните все обязательные поля');
+            return;
+        }
+        
+        // Показ лоадера
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        submitBtn.querySelector('span').textContent = 'Сохранение...';
+    });
+
+    // Анимация появления полей
+    const parameterCards = document.querySelectorAll('.parameter-input-card');
+    parameterCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+});
+// Добавляем после существующего JavaScript кода
+document.addEventListener('DOMContentLoaded', function() {
+    // Функции для кнопок увеличения/уменьшения
+    function updateParameterValue(fieldId, change) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        const currentValue = parseFloat(field.value) || 0;
+        const step = parseFloat(field.step) || 1;
+        const min = parseFloat(field.min) || -Infinity;
+        const max = parseFloat(field.max) || Infinity;
+        
+        let newValue = currentValue + (change * step);
+        newValue = Math.max(min, Math.min(max, newValue));
+        
+        // Округляем до количества знаков после запятой как в step
+        const decimals = field.step.includes('.') ? field.step.split('.')[1].length : 0;
+        newValue = parseFloat(newValue.toFixed(decimals));
+        
+        field.value = newValue;
+        
+        // Триггерим событие изменения
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        field.dispatchEvent(new Event('blur', { bubbles: true }));
+        
+        // Анимация изменения
+        field.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            field.style.transform = 'scale(1)';
+        }, 150);
+    }
+    
+    // Обработчики для кнопок
+    document.querySelectorAll('.btn-increase').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            updateParameterValue(targetId, 1);
+        });
+    });
+    
+    document.querySelectorAll('.btn-decrease').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            updateParameterValue(targetId, -1);
+        });
+    });
+    
+    document.querySelectorAll('.btn-reset').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const field = document.getElementById(targetId);
+            if (field) {
+                field.value = field.defaultValue || '';
+                field.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Анимация сброса
+                field.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    field.style.transform = 'scale(1)';
+                }, 150);
+            }
+        });
+    });
+    
+    // Быстрое увеличение/уменьшение при зажатии кнопки
+    let intervalId;
+    
+    function startContinuousChange(button, change) {
+        const targetId = button.getAttribute('data-target');
+        updateParameterValue(targetId, change);
+        
+        intervalId = setInterval(() => {
+            updateParameterValue(targetId, change);
+        }, 100);
+    }
+    
+    function stopContinuousChange() {
+        clearInterval(intervalId);
+    }
+    
+    // Обработчики для зажатия кнопок
+    document.querySelectorAll('.btn-increase, .btn-decrease').forEach(btn => {
+        btn.addEventListener('mousedown', function() {
+            const change = this.classList.contains('btn-increase') ? 1 : -1;
+            startContinuousChange(this, change);
+        });
+        
+        btn.addEventListener('mouseup', stopContinuousChange);
+        btn.addEventListener('mouseleave', stopContinuousChange);
+        btn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            const change = this.classList.contains('btn-increase') ? 1 : -1;
+            startContinuousChange(this, change);
+        });
+        btn.addEventListener('touchend', stopContinuousChange);
     });
 });
 </script>

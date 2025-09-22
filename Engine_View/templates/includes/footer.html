@@ -1,6 +1,43 @@
 <!-- templates/includes/footer.html -->
-<footer class="bg-dark text-light text-center py-3 mt-auto">
+<footer class="footer-super-minimal mt-auto">
     <div class="container">
-        <p class="mb-0">&copy; {% now "Y" %} Engine View. Все права защищены.</p>
+        <div class="footer-content">
+            <span class="footer-text">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Engine View &copy; {% now "Y" %}
+            </span>
+            <span class="footer-text">
+                <i class="bi bi-code-slash me-1"></i>
+                Django Powered
+            </span>
+        </div>
     </div>
 </footer>
+
+<style>
+.footer-super-minimal {
+    background: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    padding: 1rem 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.footer-text i {
+    color: #667eea;
+}
+
+@media (max-width: 576px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+</style>

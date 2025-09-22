@@ -1,100 +1,396 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Замер {{ measurement.timestamp }} - Engine View{% endblock %}
+{% block title %}Замер {{ measurement.timestamp }} - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2>📊 Детали замера</h2>
-            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-secondary">
-                ← Назад к списку
-            </a>
+        <div class="glass-effect rounded-3 p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-clipboard2-data me-2"></i>Детали замера параметров
+                    </h2>
+                    <div class="d-flex align-items-center gap-3 text-muted">
+                        <span><i class="bi bi-calendar me-1"></i>{{ measurement.timestamp|date:"d.m.Y H:i" }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-clock me-1"></i>{{ measurement.timestamp|timesince }} назад</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary-modern">
+                        <i class="bi bi-arrow-left me-2"></i>Назад к списку
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'monitoring:delete_measurement' measurement.pk %}" 
+                       class="btn btn-outline-danger-modern"
+                       onclick="return confirm('Удалить этот замер?')">
+                        <i class="bi bi-trash me-2"></i>Удалить
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>📋 Информация о замере</h5>
+    <!-- Блок информации -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="glass-effect rounded-3 h-100">
+            <div class="card-header-modern p-4">
+                <h5 class="mb-0 text-white">
+                    <i class="bi bi-info-circle me-2"></i>Информация о замере
+                </h5>
             </div>
-            <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <th>Судно:</th>
-                        <td>{{ measurement.engine.vessel.name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Двигатель:</th>
-                        <td>{{ measurement.engine.name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Модель:</th>
-                        <td>{{ measurement.engine.model }}</td>
-                    </tr>
-                    <tr>
-                        <th>Время замера:</th>
-                        <td>{{ measurement.timestamp|date:"d.m.Y H:i" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Добавил:</th>
-                        <td>
-                            {% if measurement.created_by %}
-                                {{ measurement.created_by.username }}
-                            {% else %}
-                                <span class="text-muted">Система</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
+            <div class="p-4">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon bg-primary-modern">
+                            <i class="bi bi-ship"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Судно</div>
+                            <div class="info-value">{{ measurement.engine.vessel.name }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon bg-warning-modern">
+                            <i class="bi bi-gear"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Двигатель</div>
+                            <div class="info-value">{{ measurement.engine.name }}</div>
+                            <div class="info-subvalue">{{ measurement.engine.model }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon bg-success-modern">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Время замера</div>
+                            <div class="info-value">{{ measurement.timestamp|date:"d.m.Y" }}</div>
+                            <div class="info-subvalue">{{ measurement.timestamp|date:"H:i:s" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon bg-info-modern">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Добавил</div>
+                            <div class="info-value">
+                                {% if measurement.created_by %}
+                                    {{ measurement.created_by.username }}
+                                {% else %}
+                                    <span class="text-muted">Система</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if measurement.notes %}
+                <div class="notes-section mt-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-chat-text text-primary me-2"></i>
+                        <h6 class="mb-0">Примечания к замеру</h6>
+                    </div>
+                    <div class="notes-content bg-light rounded p-3">
+                        <p class="mb-0">{{ measurement.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
-        
-        {% if measurement.notes %}
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5>📝 Примечания</h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">{{ measurement.notes }}</p>
-            </div>
-        </div>
-        {% endif %}
     </div>
 
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5>📈 Параметры двигателя</h5>
+    <!-- Блок параметров -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="glass-effect rounded-3 h-100">
+            <div class="card-header-modern p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-graph-up me-2"></i>Параметры двигателя
+                    </h5>
+                    <span class="badge bg-white bg-opacity-20">
+                        {{ parameters|length }} параметров
+                    </span>
+                </div>
             </div>
-            <div class="card-body">
+            
+            <div class="p-4">
                 {% if parameters %}
-                <div class="row">
+                <div class="row g-3">
                     {% for param_name, param_data in parameters.items %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body py-3">
-                                <h6 class="card-title mb-1">{{ param_name }}</h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="h4 text-primary">{{ param_data.value }}</span>
-                                    <span class="text-muted">{{ param_data.unit }}</span>
+                    <div class="col-xl-6 col-md-6">
+                        <div class="parameter-card">
+                            <div class="parameter-header">
+                                <div class="parameter-icon">
+                                    <i class="bi bi-speedometer2"></i>
                                 </div>
+                                <div class="parameter-info">
+                                    <div class="parameter-name">{{ param_name }}</div>
+                                    <div class="parameter-unit">{{ param_data.unit }}</div>
+                                </div>
+                            </div>
+                            <div class="parameter-value">
+                                <span class="value">{{ param_data.value }}</span>
+                                {% if param_data.normal_range %}
+                                <div class="parameter-range">
+                                    <div class="range-bar">
+                                        <div class="range-fill" style="width: {{ param_data.percentage }}%"></div>
+                                    </div>
+                                    <div class="range-labels">
+                                        <small>{{ param_data.normal_range.min }}</small>
+                                        <small>{{ param_data.normal_range.max }}</small>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="text-center py-4">
-                    <h5>📭 Параметры не указаны</h5>
+                <div class="empty-parameters text-center py-5">
+                    <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                    <h5 class="mt-3">Параметры не указаны</h5>
                     <p class="text-muted">Для этого замера не указаны значения параметров</p>
+                    <a href="{% url 'monitoring:create_measurement' %}" class="btn btn-primary-modern mt-2">
+                        <i class="bi bi-plus-circle me-2"></i>Создать новый замер
+                    </a>
                 </div>
                 {% endif %}
+                
+                <!-- Быстрые действия -->
+                <div class="quick-actions mt-4 pt-3 border-top">
+                    <h6 class="mb-3">Быстрые действия</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'monitoring:trends' %}?engine={{ measurement.engine.id }}" 
+                           class="btn btn-outline-primary-modern btn-sm">
+                            <i class="bi bi-graph-up me-1"></i>Графики
+                        </a>
+                        <a href="{% url 'monitoring:create_measurement' %}?engine={{ measurement.engine.id }}" 
+                           class="btn btn-outline-success-modern btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i>Новый замер
+                        </a>
+                        <a href="{% url 'monitoring:measurement_list' %}?engine={{ measurement.engine.id }}" 
+                           class="btn btn-outline-info-modern btn-sm">
+                            <i class="bi bi-list-ul me-1"></i>Все замеры
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Стили для страницы деталей */
+.card-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--surface-color);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.info-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.info-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.info-subvalue {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.parameter-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.parameter-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.parameter-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.parameter-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.parameter-info {
+    flex: 1;
+}
+
+.parameter-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.parameter-unit {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.parameter-value .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+    text-align: center;
+}
+
+.parameter-range {
+    margin-top: 1rem;
+}
+
+.range-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.range-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #059669);
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.notes-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.notes-content {
+    border-left: 4px solid #667eea;
+}
+
+.empty-parameters {
+    padding: 3rem 1rem;
+}
+
+.quick-actions .btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .info-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .parameter-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .parameter-value .value {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+// Анимация прогресс-баров
+document.addEventListener('DOMContentLoaded', function() {
+    const rangeFills = document.querySelectorAll('.range-fill');
+    rangeFills.forEach(fill => {
+        const width = fill.style.width;
+        fill.style.width = '0';
+        setTimeout(() => {
+            fill.style.transition = 'width 1s ease';
+            fill.style.width = width;
+        }, 500);
+    });
+    
+    // Анимация появления карточек
+    const cards = document.querySelectorAll('.parameter-card, .info-item');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
 {% endblock %}

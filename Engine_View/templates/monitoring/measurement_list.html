@@ -1,157 +1,512 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Замеры - Engine View{% endblock %}
+{% block title %}Замеры - Engine View · Мониторинг судовых двигателей{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
-	<div class="col-12">
-			<div class="d-flex justify-content-between align-items-center">
-					<h2>📋 Все замеры</h2>
-					<a href="{% url 'monitoring:create_measurement' %}" class="btn btn-success">
-							➕ Добавить замер
-					</a>
-			</div>
-	</div>
+    <div class="col-12">
+        <div class="glass-effect rounded-3 p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold"><i class="bi bi-clipboard-data me-2"></i>Все замеры параметров</h2>
+                    <p class="text-muted mb-0">История измерений судовых двигателей</p>
+                </div>
+                <a href="{% url 'monitoring:create_measurement' %}" class="btn btn-success-modern px-4 py-3">
+                    <i class="bi bi-plus-circle me-2"></i>Добавить замер
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Фильтры -->
 <div class="row mb-4">
-	<div class="col-12">
-			<div class="card">
-					<div class="card-body">
-							<form method="get" class="row g-3">
-									<div class="col-md-3">
-											<label class="form-label">Судно</label>
-											{{ filter_form.vessel }}
-									</div>
-									<div class="col-md-3">
-											<label class="form-label">Двигатель</label>
-											{{ filter_form.engine }}
-									</div>
-									<div class="col-md-2">
-											<label class="form-label">С даты</label>
-											{{ filter_form.date_from }}
-									</div>
-									<div class="col-md-2">
-											<label class="form-label">По дату</label>
-											{{ filter_form.date_to }}
-									</div>
-									<div class="col-md-2">
-											<label class="form-label">&nbsp;</label>
-											<button type="submit" class="btn btn-primary w-100">🔍 Применить</button>
-									</div>
-							</form>
-					</div>
-			</div>
-	</div>
+    <div class="col-12">
+        <div class="glass-effect rounded-3 p-4">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-funnel text-primary me-2"></i>
+                <h5 class="mb-0">Фильтрация данных</h5>
+            </div>
+            <form method="get" class="row g-3">
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-ship me-2"></i>Судно
+                        </label>
+                        <div class="input-group-modern">
+                            {{ filter_form.vessel }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-gear me-2"></i>Двигатель
+                        </label>
+                        <div class="input-group-modern">
+                            {{ filter_form.engine }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-calendar me-2"></i>С даты
+                        </label>
+                        <div class="input-group-modern">
+                            {{ filter_form.date_from }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-6">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-calendar-check me-2"></i>По дату
+                        </label>
+                        <div class="input-group-modern">
+                            {{ filter_form.date_to }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-12">
+                    <div class="form-group-modern">
+                        <label class="form-label fw-semibold opacity-0">Применить</label>
+                        <button type="submit" class="btn btn-primary-modern w-100 py-3">
+                            <i class="bi bi-funnel me-2"></i>Применить
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            {% if request.GET %}
+            <div class="mt-3">
+                <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>Сбросить фильтры
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<!-- Статистика -->
+{% if measurements %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-effect rounded-3 p-3">
+            <div class="row g-3 text-center">
+                <div class="col-md-3">
+                    <div class="stat-badge bg-primary-modern">
+                        <i class="bi bi-clock-history display-6"></i>
+                        <div class="stat-info">
+                            <div class="stat-number">{{ measurements.count }}</div>
+                            <div class="stat-label">Всего замеров</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-badge bg-success-modern">
+                        <i class="bi bi-ship display-6"></i>
+                        <div class="stat-info">
+                            <div class="stat-number">{{ vessels_count }}</div>
+                            <div class="stat-label">Судов</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-badge bg-warning-modern">
+                        <i class="bi bi-gear display-6"></i>
+                        <div class="stat-info">
+                            <div class="stat-number">{{ engines_count }}</div>
+                            <div class="stat-label">Двигателей</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-badge bg-info-modern">
+                        <i class="bi bi-calendar display-6"></i>
+                        <div class="stat-info">
+                            <div class="stat-number">{{ last_week_count }}</div>
+                            <div class="stat-label">За неделю</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Таблица замеров -->
 <div class="row">
-	<div class="col-12">
-			<div class="card">
-					<div class="card-body">
-							{% if measurements %}
-							<div class="table-responsive">
-									<table class="table table-striped table-hover">
-											<thead>
-													<tr>
-															<th>Время</th>
-															<th>Судно</th>
-															<th>Двигатель</th>
-															<th>Основные параметры</th>
-															<th>Кто добавил</th>
-															<th>Действия</th>
-													</tr>
-											</thead>
-											<tbody>
-													{% for measurement in measurements %}
-													<tr>
-															<td>
-																	<strong>{{ measurement.timestamp|date:"d.m.Y" }}</strong><br>
-																	<small class="text-muted">{{ measurement.timestamp|date:"H:i" }}</small>
-															</td>
-															<td>{{ measurement.engine.vessel.name }}</td>
-															<td>{{ measurement.engine.name }}</td>
-															<td>
-																	{% with param_values=measurement.parameter_values.all|slice:":3" %}
-																			{% for pv in param_values %}
-																					<span class="badge bg-light text-dark me-1">
-																							{{ pv.parameter_type.name }}: {{ pv.value }} {{ pv.parameter_type.unit }}
-																					</span>
-																			{% endfor %}
-																			{% if measurement.parameter_values.count > 3 %}
-																					<span class="badge bg-secondary">+{{ measurement.parameter_values.count|add:"-3" }}</span>
-																			{% endif %}
-																	{% endwith %}
-															</td>
-															<td>
-																	{% if measurement.created_by %}
-																			{{ measurement.created_by.username }}
-																	{% else %}
-																			<span class="text-muted">Система</span>
-																	{% endif %}
-															</td>
-															<td>
-																	<div class="btn-group">
-																			<a href="{% url 'monitoring:measurement_detail' measurement.pk %}" 
-																			class="btn btn-sm btn-outline-primary">
-																					👁️ Просмотр
-																			</a>
-																			{% if user.is_staff %}
-																			<a href="{% url 'monitoring:delete_measurement' measurement.pk %}" 
-																			class="btn btn-sm btn-outline-danger"
-																			onclick="return confirm('Удалить этот замер?')">
-																					🗑️ Удалить
-																			</a>
-																			{% endif %}
-																	</div>
-															</td>
-													</tr>
-													{% endfor %}
-											</tbody>
-									</table>
-							</div>
+    <div class="col-12">
+        <div class="glass-effect rounded-3 overflow-hidden">
+            <div class="table-header-modern p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-table me-2"></i>История замеров
+                    </h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="input-group input-group-modern" style="max-width: 300px;">
+                            <input type="text" class="form-control-modern" placeholder="Поиск..." id="table-search">
+                            <button class="btn btn-outline-light">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <div class="text-white">
+                            Показано: <strong>{{ measurements.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-							<!-- Пагинация -->
-							{% if is_paginated %}
-							<nav aria-label="Page navigation">
-									<ul class="pagination justify-content-center">
-											{% if page_obj.has_previous %}
-											<li class="page-item">
-													<a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">←</a>
-											</li>
-											{% endif %}
-											
-											{% for num in page_obj.paginator.page_range %}
-													{% if page_obj.number == num %}
-													<li class="page-item active"><span class="page-link">{{ num }}</span></li>
-													{% else %}
-													<li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
-													{% endif %}
-											{% endfor %}
-											
-											{% if page_obj.has_next %}
-											<li class="page-item">
-													<a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">→</a>
-											</li>
-											{% endif %}
-									</ul>
-							</nav>
-							{% endif %}
+            <div class="p-0">
+                {% if measurements %}
+                <div class="table-responsive-modern">
+                    <table class="table table-modern mb-0" id="measurements-table">
+                        <thead>
+                            <tr>
+                                <th width="15%">Время замера</th>
+                                <th width="15%">Судно</th>
+                                <th width="15%">Двигатель</th>
+                                <th width="35%">Параметры</th>
+                                <th width="10%">Пользователь</th>
+                                <th width="10%">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for measurement in measurements %}
+                            <tr class="measurement-row">
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <strong class="text-primary">{{ measurement.timestamp|date:"d.m.Y" }}</strong>
+                                        <small class="text-muted">{{ measurement.timestamp|date:"H:i" }}</small>
+                                        <small class="badge bg-light text-dark mt-1">
+                                            {{ measurement.timestamp|timesince }} назад
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-ship text-primary me-2"></i>
+                                        <span>{{ measurement.engine.vessel.name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-gear text-warning me-2"></i>
+                                        <span>{{ measurement.engine.name }}</span>
+                                    </div>
+                                    <small class="text-muted">{{ measurement.engine.model }}</small>
+                                </td>
+                                <td>
+                                    <div class="parameters-grid">
+                                        {% with param_values=measurement.parameter_values.all|slice:":4" %}
+                                            {% for pv in param_values %}
+                                                <div class="parameter-badge">
+                                                    <span class="param-name">{{ pv.parameter_type.name }}</span>
+                                                    <span class="param-value">{{ pv.value }}</span>
+                                                    <span class="param-unit">{{ pv.parameter_type.unit }}</span>
+                                                </div>
+                                            {% endfor %}
+                                            {% if measurement.parameter_values.count > 4 %}
+                                                <div class="parameter-more">
+                                                    +{{ measurement.parameter_values.count|add:"-4" }}
+                                                </div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="user-badge">
+                                        {% if measurement.created_by %}
+                                            <i class="bi bi-person-circle me-1"></i>
+                                            {{ measurement.created_by.username }}
+                                        {% else %}
+                                            <i class="bi bi-robot me-1"></i>
+                                            <span class="text-muted">Система</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group-modern">
+                                        <a href="{% url 'monitoring:measurement_detail' measurement.pk %}" 
+                                           class="btn btn-action btn-view" 
+                                           title="Просмотр деталей">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if user.is_staff %}
+                                        <a href="{% url 'monitoring:delete_measurement' measurement.pk %}" 
+                                           class="btn btn-action btn-delete"
+                                           onclick="return confirm('Удалить этот замер?')"
+                                           title="Удалить замер">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-							{% else %}
-							<div class="text-center py-5">
-									<h4>📭 Замеры не найдены</h4>
-									<p class="text-muted">Попробуйте изменить параметры фильтрации</p>
-									<a href="{% url 'monitoring:create_measurement' %}" class="btn btn-primary">
-											➕ Добавить первый замер
-									</a>
-							</div>
-							{% endif %}
-					</div>
-			</div>
-	</div>
+                <!-- Пагинация -->
+                {% if is_paginated %}
+                <div class="pagination-modern p-4 border-top">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                        <h4 class="mt-3">Замеры не найдены</h4>
+                        <p class="text-muted mb-4">Попробуйте изменить параметры фильтрации или добавить новые замеры</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'monitoring:create_measurement' %}" class="btn btn-primary-modern">
+                                <i class="bi bi-plus-circle me-2"></i>Добавить первый замер
+                            </a>
+                            <a href="{% url 'monitoring:measurement_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Сбросить фильтры
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+/* Стили для страницы замеров */
+.table-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-badge {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 12px;
+    color: white;
+    gap: 1rem;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.parameters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.parameter-badge {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.param-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+.param-value {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.param-unit {
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+.parameter-more {
+    background: #6b7280;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.btn-group-modern {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-view {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.btn-view:hover {
+    background: #16a34a;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.pagination-modern {
+    background: var(--surface-color);
+}
+
+.page-link {
+    border: none;
+    margin: 0 4px;
+    border-radius: 8px !important;
+    color: #667eea;
+    font-weight: 500;
+}
+
+.page-item.active .page-link {
+    background: #667eea;
+    color: white;
+}
+
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+.measurement-row:hover {
+    background: rgba(102, 126, 234, 0.03) !important;
+    transform: translateX(4px);
+    transition: all 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .parameters-grid {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .stat-badge {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .table-header-modern .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+
+<script>
+// Поиск по таблице
+document.getElementById('table-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('.measurement-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Динамическое обновление двигателей при выборе судна
+document.getElementById('id_vessel').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Анимация загрузки
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.measurement-row');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        
+        setTimeout(() => {
+            row.style.transition = 'all 0.5s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateX(0)';
+        }, index * 100);
+    });
+});
+</script>
 {% endblock %}
