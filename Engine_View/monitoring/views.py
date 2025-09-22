@@ -119,59 +119,80 @@ def measurement_detail(request, pk):
 
 
 def trends(request):
-    """Страница с графиками трендов параметров двигателей."""
+    """Страница с графиками трендов параметров двигателей - оптимизированная версия."""
     vessels = Vessel.objects.all()
     engines = Engine.objects.all()
-    parameter_types = ParameterType.objects.filter(is_active=True)
 
-    # Фильтрация
-    measurements = Measurement.objects.select_related(
-        'engine__vessel'
-    ).prefetch_related('parameter_values__parameter_type')
-
+    # Фильтрация замеров
+    measurements = Measurement.objects.select_related('engine__vessel')
+    
+    # Применяем фильтры
+    filters = {}
     vessel_id = request.GET.get('vessel')
     engine_id = request.GET.get('engine')
-    parameter_code = request.GET.get('parameter')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
 
     if vessel_id:
         measurements = measurements.filter(engine__vessel_id=vessel_id)
+        filters['vessel_id'] = vessel_id
     if engine_id:
         measurements = measurements.filter(engine_id=engine_id)
+        filters['engine_id'] = engine_id
     if date_from:
         measurements = measurements.filter(timestamp__date__gte=date_from)
+        filters['date_from'] = date_from
     if date_to:
         measurements = measurements.filter(timestamp__date__lte=date_to)
+        filters['date_to'] = date_to
 
-    # Получаем выбранный параметр (без 404 ошибки)
+    # Эффективный поиск параметров с данными
+    from django.db.models import Exists, OuterRef
+    
+    # Подзапрос для проверки наличия данных
+    has_data_subquery = ParameterValue.objects.filter(
+        parameter_type=OuterRef('pk'),
+        measurement__in=measurements
+    )
+    
+    # Получаем параметры которые активны И имеют данные в выбранных замерах
+    parameters_with_data = ParameterType.objects.filter(is_active=True).annotate(
+        has_data=Exists(has_data_subquery)
+    ).filter(has_data=True)
+
+    # Если после фильтрации нет параметров, показываем все активные
+    if not parameters_with_data.exists():
+        parameters_with_data = ParameterType.objects.filter(is_active=True)
+
+    # Получаем выбранный параметр
     selected_parameter = None
+    parameter_code = request.GET.get('parameter')
+    
     if parameter_code:
         try:
-            selected_parameter = ParameterType.objects.get(code=parameter_code, is_active=True)
+            selected_parameter = parameters_with_data.get(code=parameter_code)
         except ParameterType.DoesNotExist:
-            # Если параметр не найден, берем первый активный
-            selected_parameter = parameter_types.first()
-            messages.warning(request, f'Параметр "{parameter_code}" не найден. Показан первый доступный параметр.')
+            selected_parameter = parameters_with_data.first()
     else:
-        # Если параметр не выбран, берем первый активный
-        selected_parameter = parameter_types.first()
+        selected_parameter = parameters_with_data.first()
 
     # Подготовка данных для графиков
     chart_data = {}
-    if selected_parameter and measurements.exists():
+    if selected_parameter:
         chart_data = prepare_chart_data(measurements, selected_parameter)
 
     context = {
         'vessels': vessels,
         'engines': engines,
-        'parameter_types': parameter_types,
+        'parameter_types': parameters_with_data,
         'selected_parameter': selected_parameter,
         'measurements_count': measurements.count(),
         'date_range': get_date_range_display(date_from, date_to),
         'vessels_count': vessels.count(),
         'engines_count': engines.count(),
         'chart_data_json': json.dumps(chart_data),
+        'parameters_with_data_count': parameters_with_data.count(),
+        'all_parameters_count': ParameterType.objects.filter(is_active=True).count(),
     }
     return render(request, 'monitoring/trends.html', context)
 
