@@ -5,233 +5,245 @@
 
 {% block content %}
 <div class="logout-container">
-    <div class="row justify-content-center align-items-center min-vh-100">
-        <div class="col-xl-4 col-lg-5 col-md-6">
-            <!-- Главная карточка -->
-            <div class="logout-card">
-                <!-- Иконка -->
-                <div class="logout-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                
-                <!-- Заголовок -->
-                <div class="logout-header">
-                    <h1 class="logout-title">До свидания!</h1>
-                    <p class="logout-subtitle">Вы успешно вышли из системы</p>
-                </div>
-
-                <!-- Информация -->
-                <div class="logout-info">
-                    <div class="info-item">
-                        <i class="bi bi-shield-check text-success"></i>
-                        <span>Сессия завершена безопасно</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="bi bi-clock-history text-info"></i>
-                        <span>Возврат через <strong id="countdown">5</strong> сек.</span>
-                    </div>
-                </div>
-
-                <!-- Кнопки действий -->
-                <div class="logout-actions">
-                    <a href="{% url 'login' %}" class="btn btn-primary-modern w-100 py-3 mb-3">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>
-                        Войти снова
-                    </a>
-                    <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary-modern w-100 py-3">
-                        <i class="bi bi-house me-2"></i>
-                        На главную страницу
-                    </a>
-                </div>
-
-                <!-- Дополнительная информация -->
-                <div class="logout-footer">
-                    <small class="text-muted">
-                        Спасибо за использование Engine View
-                    </small>
-                </div>
-            </div>
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-xl-4 col-lg-5 col-md-6">
+      <!-- Главная карточка -->
+      <div class="logout-card">
+        <!-- Иконка -->
+        <div class="logout-icon">
+          <i class="bi bi-check-circle"></i>
         </div>
+        
+        <!-- Заголовок -->
+        <div class="logout-header">
+          <h1 class="logout-title">До свидания!</h1>
+          <p class="logout-subtitle">Вы успешно вышли из системы</p>
+        </div>
+
+        <!-- Информация -->
+        <div class="logout-info">
+          <div class="info-item">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Сессия завершена безопасно</span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-clock-history text-info"></i>
+            <span>Возврат через <strong id="countdown">5</strong> сек.</span>
+          </div>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="logout-actions">
+          <a href="{% url 'login' %}" class="btn btn-primary-modern w-100 py-3 mb-3">
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            Войти снова
+          </a>
+          <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary-modern w-100 py-3">
+            <i class="bi bi-house me-2"></i>
+            На главную страницу
+          </a>
+        </div>
+
+        <!-- Дополнительная информация -->
+        <div class="logout-footer">
+          <small class="text-muted">
+            Спасибо за использование Engine View
+          </small>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <style>
 .logout-container {
-    background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #2a3142 100%);
-    min-height: 100vh;
-    padding: 2rem 0;
+  background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #2a3142 100%);
+  min-height: 100vh;
+  padding: 2rem 0;
 }
 
 .logout-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 3rem 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .logout-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.login-icon {
-    font-size: 4rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-clip: text; /* Стандартное свойство */
-    -webkit-background-clip: text; /* Вендорный префикс для старых браузеров */
-    -webkit-text-fill-color: transparent;
-    color: transparent; /* Стандартное свойство */
-    margin-bottom: 1rem;
+.logout-icon {
+  font-size: 4rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin-bottom: 1rem;
 }
 
 .logout-header {
-    margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 
 .logout-title {
-    font-weight: 700;
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
-    font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
 }
 
 .logout-subtitle {
-    color: var(--text-muted);
-    font-size: 1.1rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
 }
 
 .logout-info {
-    background: rgba(16, 185, 129, 0.05);
-    border: 1px solid rgba(16, 185, 129, 0.1);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .info-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .info-item:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .logout-actions {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .btn-outline-secondary-modern {
-    border: 2px solid var(--border-color);
-    color: var(--text-color);
-    font-weight: 500;
-    transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-outline-secondary-modern:hover {
-    background: var(--border-color);
-    color: var(--text-color);
+  background: var(--border-color);
+  color: var(--text-color);
 }
 
 .logout-footer {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
 }
 
 /* Анимации */
 @keyframes successCheck {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .logout-icon i {
-    animation: successCheck 0.6s ease-out;
+  animation: successCheck 0.6s ease-out;
 }
 
 @keyframes countdownPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 #countdown {
-    animation: countdownPulse 1s infinite;
-    color: #667eea;
-    font-weight: 700;
+  animation: countdownPulse 1s infinite;
+  color: #667eea;
+  font-weight: 700;
 }
 
 .logout-card {
-    animation: fadeInUp 0.6s ease-out;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    .logout-card {
-        padding: 2rem 1.5rem;
-        margin: 1rem;
-    }
-    
-    .logout-title {
-        font-size: 1.75rem;
-    }
-    
-    .logout-icon {
-        font-size: 4rem;
-    }
+  .logout-card {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+  
+  .logout-title {
+    font-size: 1.75rem;
+  }
+  
+  .logout-icon {
+    font-size: 4rem;
+  }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Таймер перенаправления
-    let seconds = 5;
-    const countdownElement = document.getElementById('countdown');
-    const countdownInterval = setInterval(function() {
-        seconds--;
-        countdownElement.textContent = seconds;
-        
-        if (seconds <= 0) {
-            clearInterval(countdownInterval);
-            window.location.href = "{% url 'pages:home' %}";
-        }
-    }, 1000);
-
-    // Анимация появления
-    const card = document.querySelector('.logout-card');
-    card.style.opacity = '0';
+  // Таймер перенаправления
+  let seconds = 5;
+  const countdownElement = document.getElementById('countdown');
+  const countdownInterval = setInterval(function() {
+    seconds--;
+    countdownElement.textContent = seconds;
     
-    setTimeout(() => {
-        card.style.transition = 'opacity 0.6s ease';
-        card.style.opacity = '1';
-    }, 100);
+    if (seconds <= 0) {
+      clearInterval(countdownInterval);
+      window.location.href = "{% url 'pages:home' %}";
+    }
+  }, 1000);
 
-    // Остановка таймера при взаимодействии
-    const links = document.querySelectorAll('a');
-    links.forEach(link => {
-        link.addEventListener('click', function() {
-            clearInterval(countdownInterval);
-        });
-        
-        link.addEventListener('mouseenter', function() {
-            countdownElement.style.animation = 'none';
-        });
-        
-        link.addEventListener('mouseleave', function() {
-            countdownElement.style.animation = 'countdownPulse 1s infinite';
-        });
+  // Анимация появления
+  const card = document.querySelector('.logout-card');
+  card.style.opacity = '0';
+  
+  setTimeout(() => {
+    card.style.transition = 'opacity 0.6s ease';
+    card.style.opacity = '1';
+  }, 100);
+
+  // Остановка таймера при взаимодействии
+  const links = document.querySelectorAll('a');
+  links.forEach(link => {
+    link.addEventListener('click', function() {
+      clearInterval(countdownInterval);
     });
+    
+    link.addEventListener('mouseenter', function() {
+      countdownElement.style.animation = 'none';
+    });
+    
+    link.addEventListener('mouseleave', function() {
+      countdownElement.style.animation = 'countdownPulse 1s infinite';
+    });
+  });
 });
 </script>
 {% endblock %}

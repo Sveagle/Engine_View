@@ -9,39 +9,18 @@ from io import TextIOWrapper
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import CSVImportForm, MeasurementFilterForm, MeasurementWithParametersForm, ParameterTypeForm
+from .forms import (
+    CSVImportForm,
+    MeasurementFilterForm,
+    MeasurementWithParametersForm,
+    ParameterTypeForm,
+)
 from .models import Engine, Measurement, ParameterType, ParameterValue, Vessel
-
-
-def home_view(request):
-    """Главная страница системы мониторинга."""
-    vessels = Vessel.objects.prefetch_related('engines').all()
-    engines_count = Engine.objects.count()
-    measurements_count = Measurement.objects.count()
-
-    # Получаем дату последнего замера
-    last_measurement = Measurement.objects.order_by('-timestamp').first()
-    last_measurement_date = last_measurement.timestamp if last_measurement else None
-
-    # Добавляем последний замер для каждого судна
-    for vessel in vessels:
-        vessel.last_measurement = Measurement.objects.filter(
-            engine__vessel=vessel
-        ).order_by('-timestamp').first()
-
-    context = {
-        'vessels': vessels,
-        'vessels_count': vessels.count(),
-        'engines_count': engines_count,
-        'measurements_count': measurements_count,
-        'last_measurement_date': last_measurement_date,
-    }
-
-    return render(request, 'monitoring/home.html', context)
 
 
 def measurement_list(request):
@@ -83,9 +62,13 @@ def measurement_list(request):
 
     context = {
         'measurements': measurements,
-        'vessels_count': measurements.values('engine__vessel').distinct().count(),
+        'vessels_count': measurements.values(
+            'engine__vessel'
+        ).distinct().count(),
         'engines_count': measurements.values('engine').distinct().count(),
-        'last_week_count': measurements.filter(timestamp__gte=one_week_ago).count(),
+        'last_week_count': measurements.filter(
+            timestamp__gte=one_week_ago
+        ).count(),
         'filter_form': filter_form,
         'is_paginated': paginator.num_pages > 1,
         'page_obj': page_obj,
@@ -119,13 +102,13 @@ def measurement_detail(request, pk):
 
 
 def trends(request):
-    """Страница с графиками трендов параметров двигателей - оптимизированная версия."""
+    """Страница с графиками трендов параметров двигателей."""
     vessels = Vessel.objects.all()
     engines = Engine.objects.all()
 
     # Фильтрация замеров
     measurements = Measurement.objects.select_related('engine__vessel')
-    
+
     # Применяем фильтры
     filters = {}
     vessel_id = request.GET.get('vessel')
@@ -147,18 +130,16 @@ def trends(request):
         filters['date_to'] = date_to
 
     # Эффективный поиск параметров с данными
-    from django.db.models import Exists, OuterRef
-    
     # Подзапрос для проверки наличия данных
     has_data_subquery = ParameterValue.objects.filter(
         parameter_type=OuterRef('pk'),
         measurement__in=measurements
     )
-    
+
     # Получаем параметры которые активны И имеют данные в выбранных замерах
-    parameters_with_data = ParameterType.objects.filter(is_active=True).annotate(
-        has_data=Exists(has_data_subquery)
-    ).filter(has_data=True)
+    parameters_with_data = ParameterType.objects.filter(
+        is_active=True
+    ).annotate(has_data=Exists(has_data_subquery)).filter(has_data=True)
 
     # Если после фильтрации нет параметров, показываем все активные
     if not parameters_with_data.exists():
@@ -167,7 +148,7 @@ def trends(request):
     # Получаем выбранный параметр
     selected_parameter = None
     parameter_code = request.GET.get('parameter')
-    
+
     if parameter_code:
         try:
             selected_parameter = parameters_with_data.get(code=parameter_code)
@@ -192,7 +173,9 @@ def trends(request):
         'engines_count': engines.count(),
         'chart_data_json': json.dumps(chart_data),
         'parameters_with_data_count': parameters_with_data.count(),
-        'all_parameters_count': ParameterType.objects.filter(is_active=True).count(),
+        'all_parameters_count': ParameterType.objects.filter(
+            is_active=True
+        ).count(),
     }
     return render(request, 'monitoring/trends.html', context)
 
@@ -296,7 +279,8 @@ def create_measurement(request):
     else:
         form = MeasurementWithParametersForm()
 
-    return render(request, 'monitoring/create_measurement.html', {'form': form})
+    return render(
+        request, 'monitoring/create_measurement.html', {'form': form})
 
 
 @login_required
@@ -321,7 +305,7 @@ def import_csv(request):
 
                 imported_count = 0
                 error_rows = []
-                created_parameters = []  # Для отслеживания созданных параметров
+                created_parameters = []  # Для отслеживания параметров
 
                 # Получаем все активные параметры для маппинга
                 parameter_mapping = {}
@@ -333,7 +317,8 @@ def import_csv(request):
                     try:
                         # Ищем колонку с временем
                         timestamp_str = None
-                        time_keys = ['timestamp', 'time', 'время', 'дата', 'date']
+                        time_keys = [
+                            'timestamp', 'time', 'время', 'дата', 'date']
 
                         for key in time_keys:
                             if key in row and row.get(key):
@@ -341,11 +326,15 @@ def import_csv(request):
                                 break
 
                         if not timestamp_str:
-                            error_rows.append(f"Строка {row_num}: Не найдена колонка с временем")
+                            error_rows.append(
+                                f"Строка {row_num}: Не найдена колонка времени"
+                            )
                             continue
 
                         # Парсим время
-                        timestamp = datetime.strptime(timestamp_str.strip(), timestamp_format)
+                        timestamp = datetime.strptime(
+                            timestamp_str.strip(), timestamp_format
+                        )
 
                         # Создаем замер
                         measurement = Measurement(
@@ -360,10 +349,13 @@ def import_csv(request):
                         for header, value in row.items():
                             # Пропускаем колонки с временем и пустые значения
                             header_lower = header.lower().strip()
-                            if (header_lower in time_keys or
+                            if (
+                                header_lower in time_keys or
                                 not value or
                                 not str(value).strip() or
-                                str(value).strip().lower() in ['null', 'none', '']):
+                                str(value).strip().lower() in [
+                                    'null', 'none', '']
+                            ):
                                 continue
 
                             value_str = str(value).strip()
@@ -383,50 +375,68 @@ def import_csv(request):
                                     float(value_str.replace(',', '.'))
                                     data_type = 'number'
                                     # Пытаемся угадать единицы измерения
-                                    if any(word in header_lower for word in ['temp', 'temperature', 'темп']):
+                                    if any(word in header_lower for word in [
+                                        'temp', 'temperature', 'темп'
+                                    ]):
                                         unit = '°C'
-                                    elif any(word in header_lower for word in ['press', 'pressure', 'давлен']):
+                                    elif any(word in header_lower for word in [
+                                        'press', 'pressure', 'давлен'
+                                    ]):
                                         unit = 'бар'
-                                    elif any(word in header_lower for word in ['rpm', 'оборот', 'speed']):
+                                    elif any(word in header_lower for word in [
+                                        'rpm', 'оборот', 'speed'
+                                    ]):
                                         unit = 'об/мин'
-                                    elif any(word in header_lower for word in ['fuel', 'топлив']):
+                                    elif any(word in header_lower for word in [
+                                        'fuel', 'топлив'
+                                    ]):
                                         unit = 'л/ч'
                                 except ValueError:
                                     data_type = 'text'
 
                                 # Создаем новый параметр
-                                param_type, created = ParameterType.objects.get_or_create(
-                                    name=header.title(),
-                                    code=header_lower.replace(' ', '_').replace('-', '_'),
-                                    defaults={
-                                        'unit': unit,
-                                        'description': f'Автоматически создан из импорта. Тип: {data_type}',
-                                        'is_active': True,
-                                    }
+                                param_type, created = (
+                                    ParameterType.objects.get_or_create(
+                                        name=header.title(),
+                                        code=header_lower.replace(
+                                            ' ', '_'
+                                        ).replace('-', '_'),
+                                        defaults={
+                                            'unit': unit,
+                                            'description': (
+                                                f'Авто-создание из импорта. '
+                                                f'Тип: {data_type}'
+                                            ),
+                                            'is_active': True,
+                                        }
+                                    )
                                 )
                                 parameter_mapping[header_lower] = param_type
                                 if created:
                                     created_parameters.append(param_type)
 
-                            # Сохраняем значение параметра в зависимости от типа
+                            # Сохраняем значение в зависимости от типа
                             try:
-                                if param_type.unit:  # Если есть единицы измерения - значит число
-                                    clean_value = value_str.replace(',', '.').strip()
+                                if param_type.unit:
+                                    # Если есть единицы измерения - число
+                                    clean_value = value_str.replace(
+                                        ',', '.').strip()
                                     param_value = float(clean_value)
                                 else:
-                                    # Пробуем как число, если не получается - сохраняем как текст
+                                    # Пробуем число, если не получается - текст
                                     try:
-                                        clean_value = value_str.replace(',', '.').strip()
+                                        clean_value = value_str.replace(
+                                            ',', '.').strip()
                                         param_value = float(clean_value)
-                                        # Если получилось, но параметр без единиц - обновляем параметр
+                                        # Если получилось, но без единиц
                                         if not param_type.unit:
                                             param_type.unit = 'ед.'
                                             param_type.save()
                                     except ValueError:
-                                        # Сохраняем как текст (но нам нужно число, поэтому пропускаем)
+                                        # Сохраняем как текст (пропускаем)
                                         error_rows.append(
-                                            f"Строка {row_num}: Текстовое значение "
-                                            f"'{value_str}' для параметра '{header}'"
+                                            f"Строка {row_num}: Текст "
+                                            f"'{value_str}' для '{header}'"
                                         )
                                         continue
 
@@ -447,9 +457,13 @@ def import_csv(request):
                             imported_count += 1
 
                     except ValueError as e:
-                        error_rows.append(f"Строка {row_num}: Ошибка формата времени - {str(e)}")
-                    except Exception as e:
-                        error_rows.append(f"Строка {row_num}: Неожиданная ошибка - {str(e)}")
+                        error_rows.append(
+                            f"Строка {row_num}: Неправильный формат - {str(e)}"
+                        )
+                    except Exception as e:  # pylint: disable=broad-except
+                        error_rows.append(
+                            f"Строка {row_num}: Неожиданная ошибка - {str(e)}"
+                        )
 
                 # Итоговое сообщение
                 if imported_count > 0:
@@ -460,7 +474,8 @@ def import_csv(request):
                     if created_parameters:
                         messages.info(
                             request,
-                            f'📊 Создано новых параметров: {len(created_parameters)}'
+                            f'📊 Создано новых параметров: {
+                                len(created_parameters)}'
                         )
                 else:
                     messages.error(
@@ -485,7 +500,9 @@ def import_csv(request):
                 return redirect('monitoring:measurement_list')
 
             except (csv.Error, UnicodeDecodeError) as e:
-                messages.error(request, f'❌ Ошибка чтения CSV файла: {str(e)}')
+                messages.error(
+                    request, f'❌ Ошибка чтения CSV файла: {str(e)}'
+                )
                 return render(request, 'monitoring/import_csv.html', {
                     'form': form,
                     'import_errors': [f'Ошибка файла: {str(e)}'],
@@ -530,7 +547,7 @@ def download_csv_template(request):
     return response
 
 
-def vessel_engine_stats(request):
+def vessel_engine_stats(_request):
     """Страница статистики по судам и двигателям."""
     vessels = Vessel.objects.prefetch_related(
         'engines__measurements__parameter_values__parameter_type'
@@ -549,7 +566,8 @@ def vessel_engine_stats(request):
 
         for engine in vessel.engines.all():
             engine_measurements = engine.measurements.all()
-            last_measurement = engine_measurements.order_by('-timestamp').first()
+            last_measurement = engine_measurements.order_by(
+                '-timestamp').first()
 
             engine_stats = {
                 'engine': engine,
@@ -560,7 +578,7 @@ def vessel_engine_stats(request):
 
         stats.append(vessel_stats)
 
-    return render(request, 'monitoring/vessel_engine_stats.html', {
+    return render(_request, 'monitoring/vessel_engine_stats.html', {
         'stats': stats,
     })
 
@@ -580,7 +598,8 @@ def delete_measurement(request, pk):
 
         messages.success(
             request,
-            f'Замер от {timestamp} (судно {vessel_name}, двигатель {engine_name}) удален'
+            f'Замер от {timestamp} (судно {vessel_name}, '
+            f'двигатель {engine_name}) удален'
         )
         return redirect('monitoring:measurement_list')
 
@@ -606,18 +625,23 @@ def parameter_management(request):
                 parameter.is_active = not parameter.is_active
                 parameter.save()
                 status = 'включен' if parameter.is_active else 'выключен'
-                messages.success(request, f'Параметр "{parameter.name}" {status}')
+                messages.success(
+                    request, f'Параметр "{parameter.name}" {status}'
+                )
             elif action == 'delete':
                 # Проверяем, используется ли параметр
                 if parameter.parametervalue_set.exists():
                     messages.error(
                         request,
-                        f'Нельзя удалить параметр "{parameter.name}" - он используется в замерах'
+                        f'Нельзя удалить параметр "{parameter.name}" - '
+                        f'он используется в замерах'
                     )
                 else:
                     parameter_name = parameter.name
                     parameter.delete()
-                    messages.success(request, f'Параметр "{parameter_name}" удален')
+                    messages.success(
+                        request, f'Параметр "{parameter_name}" удален'
+                    )
 
             return redirect('monitoring:parameter_management')
 
@@ -635,7 +659,9 @@ def edit_parameter(request, pk):
         form = ParameterTypeForm(request.POST, instance=parameter)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Параметр "{parameter.name}" обновлен')
+            messages.success(
+                request, f'Параметр "{parameter.name}" обновлен'
+            )
             return redirect('monitoring:parameter_management')
     else:
         form = ParameterTypeForm(instance=parameter)

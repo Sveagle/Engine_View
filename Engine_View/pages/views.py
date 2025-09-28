@@ -1,8 +1,7 @@
-from django.db.models import Count
+"""Views for the pages application."""
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
-
 
 from monitoring.models import Vessel, Engine, Measurement
 
@@ -36,9 +35,11 @@ def home_view(request):
 
 @require_http_methods(["GET", "POST"])
 def custom_logout(request):
+    """Выполняет выход пользователя из системы."""
     logout(request)
     return redirect('logout_success')
 
 
 def logout_success(request):
+    """Отображает страницу успешного выхода из системы."""
     return render(request, 'registration/logout.html')
